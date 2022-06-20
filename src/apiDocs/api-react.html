@@ -1,0 +1,518 @@
+
+<!DOCTYPE html>
+<!-- Commit hash: testcommithash -->
+<html>
+  <head>
+    <script type="module">
+      import ReactMarkdown from 'https://esm.sh/react-markdown@7?bundle'
+      import remarkGfm from 'https://esm.sh/remark-gfm@3?bundle';
+      import SyntaxHighlighter from 'https://esm.sh/react-syntax-highlighter@15.5.0';
+      import { stackoverflowLight } from 'https://esm.sh/react-syntax-highlighter@15.5.0/dist/esm/styles/hljs';
+
+      window.ReactMarkdown = ReactMarkdown;
+      window.remarkGfm = remarkGfm;
+      window.SyntaxHighlighter = SyntaxHighlighter;
+      window.stackoverflowLight = stackoverflowLight;
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+      
+:root {
+  --dark-0: #0e0e0c;
+  --dark-1: #292923;
+  --dark-2: #45453a;
+  --dark-3: #616152;
+  --dark-4: #7c7c69;
+
+  --bright-0: #adad9e;
+  --bright-1: #c0c0b5;
+  --bright-2: #d4d4cc;
+  --bright-3: #e7e7e3;
+  --bright-4: #fafaf9;
+
+  --primary-0: #5e5108;
+  --primary-1: #7d6c0b;
+  --primary-2: #9c870e;
+  --primary-3: #bba111;
+  --primary-4: #dabc14;
+  --primary-5: #ebcd25;
+  --primary-6: #eed444;
+  --primary-7: #f1dc63;
+  --primary-8: #f4e382;
+  --primary-9: #f7eaa2;
+
+  --secondary-0: #425511;
+  --secondary-1: #587216;
+  --secondary-2: #6e8e1c;
+  --secondary-3: #84aa22;
+  --secondary-4: #9ac727;
+  --secondary-5: #abd838;
+  --secondary-6: #b7dd55;
+  --secondary-7: #c3e371;
+  --secondary-8: #cfe98d;
+  --secondary-9: #dbeeaa;
+
+  --green-0: #145214;
+  --green-1: #248f24;
+  --green-2: #33cc33;
+  --green-3: #70db70;
+  --green-4: #adebad;
+
+  --yellow-0: #565610;
+  --yellow-1: #96971c;
+  --yellow-2: #d7d728;
+  --yellow-3: #e3e369;
+  --yellow-4: #efefa9;
+
+  --red-0: #521414;
+  --red-1: #8f2424;
+  --red-2: #cc3333;
+  --red-3: #db7070;
+  --red-4: #ebadad;
+}
+
+body {
+  background: var(--bright-5);
+  font-family: sans-serif;
+}
+* {
+  line-height: 1.5rem;
+}
+section {
+  background: rgba(0,0,0,0.05);
+  padding: 40px;
+  border-radius: 10px;
+  margin: 20px 0px 20px 0px;
+}
+.path {
+  font-weight: bold;
+  color: var(--primary-1);
+}
+.version {
+  color: var(--green-1);
+}
+.method {
+  color: var(--secondary-2);
+}
+.type {
+  color: var(--primary-3);
+}
+.funcName {
+  font-size: 8px;
+  color: gray;
+}
+.error {
+  font-weight: bold;
+  color: red;
+}
+.returns, .usage {
+  font-weight: bold;
+}
+.docs {
+  max-width: 800px;
+  margin: auto;
+}
+.toc {
+  margin: 20px 20px 100px 20px;
+  padding: 20px;
+  background: var(--bright-3);
+  border-radius: 10px;
+}
+.toc .method {
+  min-width: 60px;
+  text-align: right;
+  display: inline-block;
+}
+.toc .link {
+  text-decoration: underline;
+}
+li {
+  margin-bottom: 10px;
+}
+h2{
+}
+.toc code {
+  display: inline-block;
+  margin: 5px;
+}
+.toc a {
+  margin: 20px;
+  color: var(--primary-1);
+  display: block;
+  text-decoration: none;
+}
+code {
+  font-family: mono, monospace;
+  background: var(--bright-2);
+  padding: 2px;
+  border-radius: 4px;
+}
+
+code.block, pre code {
+  display: block;
+  padding: 4px 10px;
+}
+
+span.code {
+  font-family: mono, monospace;
+}
+
+@media (min-width: 1000px) {
+  .docs:first-of-type {
+    position: fixed;
+    width: min(48vw, 600px);
+    max-height: 100vh;
+    overflow-y: scroll;
+  }
+  .docs:last-of-type {
+    max-width: 50vw;
+    margin-left: min(48vw,600px);
+    margin-right: unset;
+  }
+}
+
+    </style>
+    <script type="text/babel">
+      const apiName = "API";
+      const api = {"routes":[{"method":"post","path":"/v/1/endpoint/:id","assertions":{"body":{"name":{"type":"string","default":"no name","description":"A name"}},"query":{"filter":{"type":"string","optional":true},"number":{"type":"int","default":0}},"params":{"id":{"type":"id"}}},"returns":[{"status":200,"value":"ok"},{"status":400,"error":"Name too long"},{"status":200,"type":"object","keys":{"foo":{"value":"really!","description":"Some text"},"boo":{"type":"bool"},"kabaz":{"type":"bool","optional":true},"arr":{"type":"array","description":"This is an array","items":{"type":"object","description":"Some array item text","keys":{"a":{"type":"int"},"c":{"type":"object","optional":true,"keys":{"d":{"type":"int"}}},"e":{"type":"int","optional":true}}}},"objectWithUnknownKeys":{"type":"object","values":{"type":"int"},"description":"Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non."},"objectWithUnknownKeysAndUnknownTypes":{"type":"object","values":{"type":"/"}}}},{"status":400,"error":"Fieldmissmatch"}],"title":"Testendpoint for multiple purposes","description":"Behaves radically different, based on what\n the filter is.","options":{"section":"1"},"route":{"path":"/v/1/endpoint/:id","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"post"}],"methods":{"post":true},"section":"1"}},{"method":"post","path":"/v/1/faultyendpoint/:id","assertions":{"body":{"name":{"type":"string","default":"no name","description":"A name"}},"query":{"filter":{"type":"string","optional":true}},"params":{"id":{"type":"id"}}},"returns":[{"status":200,"value":"ok"},{"status":400,"error":"Name too long"},{"status":200,"type":"object","keys":{"boo":{"type":"bool"},"arr":{"type":"array","items":{"type":"object","keys":{"a":{"type":"int"}}}}}},{"status":400,"error":"Fieldmissmatch"}],"title":"Faulty Testendpoint","description":"Ment to be found to be faulty. It's documentation\ndoes not match it's behavior.","options":{"section":"1"},"route":{"path":"/v/1/faultyendpoint/:id","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"post"}],"methods":{"post":true},"section":"1"}},{"method":"post","path":"/v/1/typelessendpoint","assertions":{},"returns":[{"status":400,"error":"Fieldmissmatch"}],"title":"Typeless endpoint","description":"This endpoint is typeless but not pointless.","options":{"section":"1"},"route":{"path":"/v/1/typelessendpoint","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"post"}],"methods":{"post":true},"section":"1"}},{"method":"post","path":"/v/1/cantdecide","assertions":{"body":{"value":{"type":"oneOf","alternatives":[{"type":"int","description":"One option"},{"type":"object","values":{"type":"/"},"description":"Another option"}]}}},"returns":[{"status":400,"error":"Fieldmissmatch"}],"title":"OneOf endpoint","description":"This endpoint can't decide what it wants.","options":{"section":"1.0"},"route":{"path":"/v/1/cantdecide","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"post"}],"methods":{"post":true},"section":"1.0"}},{"method":"delete","path":"/v/1/withpw","assertions":{},"returns":[{"status":401,"error":"User not found"},{"status":400,"error":"Authorization wrong"},{"status":400,"error":"Fieldmissmatch"}],"title":"Endpoint with Pw Authentication","description":"You shall not pass, unless you have a password.","options":{"auth":"Basic btoa(uname:password)","section":"1.1"},"route":{"path":"/v/1/withpw","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"delete"}],"methods":{"delete":true},"section":"1.1"}},{"method":"patch","path":"/v/1/withtoken","assertions":{},"returns":[{"status":401,"error":"User not found"},{"status":400,"error":"Authorization wrong"},{"status":400,"error":"Fieldmissmatch"}],"title":"Endpoint with Token Authentication","description":"You shall not pass, unless you have a token.","options":{"auth":"Basic btoa(uname:token)","section":"1.1"},"route":{"path":"/v/1/withtoken","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"patch"}],"methods":{"patch":true},"section":"1.1"}},{"method":"put","path":"/v/1/withjwt","assertions":{},"returns":[{"status":401,"error":"Unauthorized"},{"status":401,"error":"Token invalid"},{"status":400,"error":"Fieldmissmatch"}],"title":"Endpoint with JWT Authentication","description":"You shall not pass, unless you have a JWT.","options":{"auth":"Bearer jwt","section":"1.1"},"route":{"path":"/v/1/withjwt","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"put"}],"methods":{"put":true},"section":"1.1"}},{"method":"get","path":"/v/1/error","assertions":{"query":{"error":{"type":"bool"}}},"returns":[{"status":400,"error":"Text 1"},{"status":400,"error":"Fieldmissmatch"}],"title":"Error checkpoint endpoint","description":"This endpoint is full of errors.","options":{},"route":{"path":"/v/1/error","stack":[{"name":"f","keys":[],"regexp":{"fast_star":false,"fast_slash":false},"method":"get"}],"methods":{"get":true}}}],"sections":[{"title":"Introduction","description":"\nThis API is for demo and testing purposes. You should never use it.\n\nBut to brighten you up, here is a table:\n\n| **asrt** | **1** | **2** | **3** | **4** |\n|----------|-------|-------|-------|-------|\n| no       | yes   | yes   | no    | no    |\n| yes      | no    | no    | ye    | kanye |\n\n  ","subsections":[]},{"title":"Some test endpoints","subsections":[{"title":"Undecided","description":"### Testing the *description*\n\nHere is some inline `Code`. It should actually be inline.\n\n~~~js\n// Some not inline code:\nconsole.log(\"Hollow orld\");\n~~~\n      ","subsections":[]},{"title":"Auth","subsections":[]}]}]};
+      const ReactMarkdown = window.ReactMarkdown;
+const remarkGfm = window.remarkGfm;
+const SyntaxHighlighter = window.SyntaxHighlighter;
+const stackoverflowLight = window.stackoverflowLight;
+
+const Markdown = (props) => (
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || "");
+        return !inline && match ? (
+          <SyntaxHighlighter
+            style={stackoverflowLight}
+            customStyle={{ padding: 0 }}
+            children={String(children).replace(/\n$/, "")}
+            language={match[1]}
+            {...props}
+          />
+        ) : (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
+      },
+    }}
+    {...props}
+  />
+);
+
+const TocLine = ({ route }) => {
+  const { path, title, version, method } = route,
+    id = `${method}_${path}`,
+    methodText = method.toUpperCase();
+
+  return (
+    <a href={`#${id}`}>
+      <span className="version">{version ? "v" + version : ""}</span>
+      <span className="link">{title || ""}</span>
+      <br />
+      &nbsp;&nbsp;<span className="method">{methodText}</span>
+      <code>{path}</code>
+    </a>
+  );
+};
+const TocSection = ({ id, name, section, routes }) => {
+  return (
+    <React.Fragment>
+      <a href={`#${id}`} style={{ fontWeight: "bold" }}>
+        {name} {section.title}
+      </a>
+      <div style={{ paddingLeft: 20 }}>
+        {getRoutesForSection(routes, "" + id).map((route) => (
+          <TocLine key={route.method + "-" + route.path} route={route} />
+        ))}
+        {(section.subsections || []).map((section, i) => (
+          <TocSection
+            key={id + "." + i}
+            id={id + "." + i}
+            name={name + "." + (i + 1)}
+            section={section}
+            routes={routes}
+          />
+        ))}
+      </div>
+    </React.Fragment>
+  );
+};
+
+const Toc = ({ sections, routes }) => (
+  <div className="toc">
+    <h2 style={{ marginLeft: 20 }}>Contents:</h2>
+
+    {sections.map((section, i) => (
+      <TocSection
+        key={i}
+        name={i + 1}
+        id={i}
+        section={section}
+        routes={routes}
+      />
+    ))}
+    {getRoutesForSection(routes).map((route) => (
+      <TocLine key={route.method + "-" + route.path} route={route} />
+    ))}
+  </div>
+);
+
+const brakeLines = (text, lineLength) => {
+  if (!text || text.length <= 0) {
+    return [];
+  }
+  const line = text.slice(0, lineLength);
+  const lineUntilBrake = line
+    .split("")
+    .reverse()
+    .reduce((a, b) => (a.length > 0 ? a + b : b === " " ? b : ""), "")
+    .split("")
+    .reverse()
+    .join("");
+  if (lineUntilBrake.length > 0) {
+    const rest = text.slice(lineUntilBrake.length);
+    return [lineUntilBrake, ...brakeLines(rest, lineLength)];
+  } else {
+    const lines = text.split(" ", 1);
+    return [
+      lines[0],
+      ...brakeLines(text.slice(lines[0].length + 1), lineLength),
+    ];
+  }
+};
+
+const printDescription = ({ description }, indent, addSpace) => {
+  if (description) {
+    return (
+      (addSpace ? "\n" : "") +
+      " ".repeat(indent) +
+      "/* " +
+      brakeLines(description + " */ ", 60).join("\n" + " ".repeat(indent + 3)) +
+      "\n"
+    );
+  } else {
+    return "";
+  }
+};
+
+const htmlifyLines = (text) =>
+  text.replace(/\n/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;");
+
+const recursivelyPrintType = (type, indent = 0) => {
+  let res = "";
+  const spaces = " ".repeat(indent);
+  if (type.type === "object") {
+    if (typeof type.keys === "object") {
+      res += `${type.optional ? "? " : ""}{
+${Object.keys(type.keys)
+  .map(
+    (key) =>
+      printDescription(type.keys[key], indent + 2, true) +
+      spaces +
+      `  "${key}": ${recursivelyPrintType(type.keys[key], indent + 2)}`
+  )
+  .join(",\n")}
+${spaces}}`;
+    } else {
+      res += `${type.optional ? "? " : ""}{
+${spaces}  <span class="type">&lt;/&gt;</span>: ${recursivelyPrintType(
+        type.values,
+        indent + 2
+      )}
+${spaces}}`;
+    }
+  } else if (type.type === "array") {
+    res += `${type.optional ? "? " : ""}[
+${printDescription(type.items, indent + 2)}${spaces}  ${recursivelyPrintType(
+      type.items,
+      indent + 2
+    )}
+${spaces}]`;
+  } else if (type.type === "oneOf") {
+    res += `${type.optional ? "? " : ""}(
+${type.alternatives
+  .map(
+    (alt) =>
+      printDescription(alt, indent + 2, true) +
+      spaces +
+      "  " +
+      recursivelyPrintType(alt, indent + 2)
+  )
+  .join(` |\n`)}
+${spaces})`;
+  } else if (type.type) {
+    res += `${type.optional ? "? " : ""}<span class="type">&lt;${
+      type.type
+    }&gt;</span>`;
+  } else {
+    res += JSON.stringify(type.value);
+  }
+  return htmlifyLines(res);
+};
+
+const Type = ({ ...type }) => {
+  return (
+    <span
+      className="code"
+      dangerouslySetInnerHTML={{ __html: recursivelyPrintType(type) }}
+    ></span>
+  );
+};
+
+const getRoutesForSection = (routes, section) =>
+  routes.filter(({ options }) => options.section === section);
+
+const Section = ({
+  title,
+  description,
+  subsections = [],
+  routes,
+  id,
+  name,
+}) => (
+  <section id={id}>
+    <h2>
+      {name} {title}
+    </h2>
+    <Markdown>{description}</Markdown>
+    {getRoutesForSection(routes, "" + id).map((route, i) => (
+      <Route key={i} route {...route} />
+    ))}
+    {subsections.map((section, i) => (
+      <Section
+        key={i}
+        {...section}
+        id={id + "." + i}
+        name={name + "." + (i + 1)}
+        routes={routes}
+      />
+    ))}
+  </section>
+);
+
+const Route = ({
+  method = "",
+  path,
+  assertions = {},
+  returns = [],
+  description,
+  title,
+  options = {},
+}) => {
+  const [, version] = path.match(/v\/?(\d+)/) || [undefined, undefined];
+  return (
+    <section id={`${method}_${path}`}>
+      <h3>
+        <span className="version">{version ? "v" + version : ""}</span> {title}
+      </h3>
+      <Markdown>{description}</Markdown>
+      <div className="api">
+        <strong className="method">{method.toUpperCase()}</strong>{" "}
+        <span className="path">{path}</span>
+        <br />
+        <ul>
+          {options.auth && (
+            <li>
+              Header:
+              <ul>
+                <li>
+                  <code className="block">Authorization: {options.auth}</code>
+                </li>
+              </ul>
+            </li>
+          )}
+
+          {Object.keys(assertions).map((type, i) => (
+            <li key={i}>
+              {type.slice(0, 1).toUpperCase() + type.slice(1)}: <br />
+              <ul>
+                {Object.keys(assertions[type]).map((key) => (
+                  <li key={key}>
+                    <code className="block">
+                      <span
+                        className="code"
+                        dangerouslySetInnerHTML={{
+                          __html: htmlifyLines(
+                            printDescription(assertions[type][key], 0)
+                          ),
+                        }}
+                      ></span>
+                      {key}: <Type {...assertions[type][key]} />
+                      {assertions[type][key].default !== undefined
+                        ? ` (= ${JSON.stringify(
+                            assertions[type][key].default
+                          )})`
+                        : ""}
+                    </code>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+        <span className="returns">Returns:</span> <br />
+        <ul>
+          {returns.map(({ status, error, ...rest }, i) => (
+            <li key={i}>
+              Status: {status}
+              <code className="block">
+                {error ? (
+                  `{ "error": ${JSON.stringify(error)} }`
+                ) : (
+                  <Type {...rest} />
+                )}
+              </code>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+};
+
+const Api = ({ api }) => {
+  const { sections = [], routes = [] } = api;
+  return (
+    <div>
+      <div className="docs">
+        <Toc sections={sections} routes={routes} />
+      </div>
+      <div className="docs" style={{ paddingLeft: 10 }}>
+        <h1>{apiName}</h1>
+        {sections.map((section, i) => (
+          <Section key={i} {...section} id={i} name={i + 1} routes={routes} />
+        ))}
+        {getRoutesForSection(routes, undefined).map((route, i) => (
+          <Route key={i} {...route} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+window.onload = function () {
+  const domContainer = document.querySelector("#root");
+  const root = ReactDOM.createRoot(domContainer);
+
+  root.render(
+    <div>
+      <Api api={api} apiName={apiName} />
+    </div>
+  );
+};
+
+    </script>
+  </head>
+  <body>
+    <div id="root" />
+  </body>
+</html>
+  

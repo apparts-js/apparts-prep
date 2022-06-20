@@ -1,0 +1,560 @@
+#+TITLE: @apparts/types
+#+DATE: [2019-08-26 Mon]
+#+AUTHOR: Philipp Uhl
+
+This package provides functions for checking correctness of values
+against certain types. It also provides a set of functions for helping
+to *build type-correct REST-APIs*, to be used with [[https://www.npmjs.com/package/express][express]].
+
+* Configuration
+
+Under the configuration name =types-config= the following options exist:
+- ~bugreportEmail {string}~ :: An email address that will be shown in
+     case of a bug.
+- ~idType {string}~ :: Can be one of
+  - ~string~
+  - ~UUIDv4~
+  - ~int~
+  - A regular expression
+
+More information on how to set this: [[https://github.com/phuhl/apparts-config][@apparts/config]].
+
+* Types
+
+A type is defined by an object. The object must either contain a key
+=type= that is an atomic type or be of the form of =object=, =array=, =oneOf=,
+=value= as described under "Compound types".
+
+** Atomic types:
+
+- ~id~ (as configured)
+- ~uuidv4~
+- ~/~ (catch all)
+- =int=
+- ~float~
+- ~hex~
+- ~base64~
+- ~bool~
+- ~string~
+- ~email~
+- ~array_int~
+- ~array_id~
+- ~password~ (alias for ~string~)
+- ~time~
+- ~array_time~ (alias for ~array_id~)
+
+To be used as ={ type: <atomic type> }=.
+
+** Compound types
+
+Compound objects make it possible to check complex JSON values for
+validity. Any sub-type can be either an atomic type or a compound type.
+
+- =object= :: Matches if the vale is an object and all the values of the
+  object have the types as specified by =values=, or if the specific
+  keys of the object are known, as specified by the key in =keys=.
+  - With known keys:
+  #+BEGIN_SRC js
+    {
+      type: "object",
+      keys: {
+        <key1>: { type: <type> [, optional: true]},
+        ...
+      }
+    }
+  #+END_SRC
+  - With unknown keys:
+  #+BEGIN_SRC js
+    {
+      type: "object",
+      values: <type>
+    }
+  #+END_SRC
+- =array= :: Matches if the value is an array and all items of the array
+  match the type, as specified by =items=.
+  #+BEGIN_SRC js
+    {
+      type: "array",
+      items: <type>
+    }
+  #+END_SRC
+- =oneOf= :: Matches if at least one of the alternatives matches
+  #+BEGIN_SRC js
+    {
+      type: "oneOf",
+      alternatives: [
+          <type>, ...
+      ]
+    }
+  #+END_SRC
+- =value= :: Matches the exact content
+  #+BEGIN_SRC js
+  {
+    value: <a value>
+  }
+  #+END_SRC
+
+** Encoding for the preparator
+
+When requesting an API checked by @apparts/types, make sure, the
+following holds:
+
+- The *body* is always expected to be in JSON format.
+- The *path* parameters must never be empty (otherwise express can't
+  route you correctly) and if the type used is an array, it must be
+  JSON encoded.
+- The *param* and *query* parameters must be URI encoded. If the =typeof=
+  gives ="object"= on the value, the value must be JSON encoded.
+
+* Usage
+
+The =preparator= function provides a wrapper around express routes. It
+checks the types of the requests and handles errors.
+
+The =preparator= function takes these arguments:
+- =assertions <object>= :: The Format the request has to be in, to be
+  accepted. The =body=, =query=, and =param= fields are optional and take
+  key-value pairs where the values are types as described in the
+  section "Types".
+- =route <func>= :: A (async) function that receives as first parameter
+  the request object that contains the parsed =body=, =query=, =params= and whatever
+  was injected by your middlewares. What the function returns will be
+  returned to the client.
+- =options <object>= ::
+  - =?title <string>= :: The title of the route (for documentation).
+  - =?description <string>= :: A description of the route (for documentation).
+  - =?returns <array>= :: All potential types that can be returned by
+    the function (for documentation and for validation). More
+    information in the section "Test API Types".
+
+#+BEGIN_SRC js
+  const { preparator } = require("@apparts/types");
+  const { HttpError } = require("@apparts/error");
+
+  const myEndpoint = preparator(
+    {
+      body: {
+        name: { type: "string", default: "no name", description: "A name" },
+      },
+      query: {
+        filter: { type: "string", optional: true }
+      },
+      params: {
+        id: { type: "id" }
+      }
+    },
+    async ({ body: { name }, query: { filter }, params: { id } }) => {
+      if (name.length > 100) {
+        new HttpError(400, "Name too long");
+      }
+      // filter might not be defined, as it is optional
+      if (filter) {
+        // Return values are JSONified automatically!
+        const resp = {
+          arr: [{ a: 1 }, { a: 2 }],
+          foo: "really!",
+          boo: true,
+          objectWithUnknownKeys: {
+            baz: filter === "asstring" ? "77" : 77,
+            boo: 99,
+          },
+          objectWithUnknownKeysAndUnknownTypes: {
+            baz: 77,
+            boo: false,
+          },
+        };
+        if (filter === "kabazplz") {
+          resp.kabaz = false;
+        }
+        return resp;
+      }
+      // This produces "ok" (literally, with the quotes)
+      return "ok";
+    }, {
+      title: "Testendpoint for multiple purposes",
+      description: `Behaves radically different, based on what
+  the filter is.`,
+      returns: [
+        { status: 200, value: "ok" },
+        { status: 400, error: "Name too long" },
+        {
+          status: 200,
+          type: "object",
+          values: {
+            foo: { value: "really!", description: "Some foo" },
+            boo: { type: "bool" },
+            kabaz: { type: "bool", optional: true },
+            arr: {
+              type: "array",
+              description: "Some array",
+              value: {
+                description: "Some array items",
+                type: "object",
+                values: {
+                  a: { type: "int", description: "A number" },
+                },
+              },
+            },
+            objectWithUnknownKeys: {
+              type: "object",
+              values: "int",
+            },
+            objectWithUnknownKeysAndUnknownTypes: {
+              type: "object",
+              values: "/",
+            },
+          },
+        },
+      ],
+    });
+
+  module.exports = { myEndpoint };
+  // app.post("/v/1/endpoint/:id", myEndpoint);
+#+END_SRC
+
+** Sending HttpErrors
+
+Use the [[https://github.com/phuhl/apparts-error][@apparts/error]] package to produce errors.
+
+** Sending other status codes then 200
+
+#+BEGIN_SRC js
+const { HttpCode } = require("@apparts/types");
+
+// ...
+const myData = { "whatever": "i want" };
+return new HttpCode(304, myData);
+// ...
+#+END_SRC
+
+** Sending a response manually
+
+Keep in mind that the preparator already did these calls for you:
+#+BEGIN_SRC js
+res.setHeader("Content-Type", "application/json");
+res.status(200);
+#+END_SRC
+
+#+BEGIN_SRC js
+  const { preparator, DontRespond } = require("@apparts/types");
+  
+  const myEndpoint = preparator({
+    /* your assertions*/
+  }, async (req, res) => {
+    // handle send by yourself
+    // res.send();
+    return new DontRespond();
+  }, {
+    title: "Endpoint that handles responding",
+  });
+#+END_SRC
+
+** Error handling by =preperator=
+
+- Should a request not match any of the type assertions as defined, the
+  =preparator= will respond with a status code of 400 and this body:
+  #+BEGIN_SRC json
+  { "error": "Fieldmissmatch", "description": "<explanation>" }
+  #+END_SRC
+- Should the route throw an error that is not an [[https://github.com/phuhl/apparts-error][HttpError]], it catches
+  the error and returns with a status code of 500 and this body
+  (encoding: =text/plain=):
+  #+BEGIN_EXAMPLE
+  SERVER ERROR! <Uuid v1> Please consider sending this error-message along with a description of what happend and what you where doing to this email-address: <config.bugreportEmail>
+  #+END_EXAMPLE
+  Additionally a more complete error will be logged:
+  - The error that was thrown will be logged as is.
+  - A JSON encoded object (for automated collecting of errors) with
+    these fields:
+    - ID :: A Uuid v1 (that is the same as was returned to the client)
+      for matching client-side errors with errors in the log.
+    - USER :: The =Authorization= header
+    - TRACE :: The stack trace of the error
+    - REQUEST :: Object with
+      - url :: The requesting url
+      - method :: HTTP method used (e.g. POST)
+      - ip :: Ip of client
+      - ua :: User agent of client
+
+** Authentication
+
+The =@apparts/types= package supports HTTP Basic auth, Bearer auth with
+certain tokens and Bearer auth with JWTs of a certain form.
+
+Ideally, you use this functionality with the [[https://github.com/phuhl/apparts-login-server][@apparts/login-server]]
+package, that provides all the necessary REST endpoints an extendable
+user model and more.
+
+For this, instead of =perperator= use the functions
+- =prepauthPW=
+- =prepauthToken=
+- =prepauthTokenJWT=
+
+These functions do all what the =preperator= function does /and/ the
+authentication check.
+
+*** Basic Auth with =prepauthPW=
+
+For this function, you need to install the package [[https://github.com/phuhl/apparts-model][@apparts/model]] and
+define a model that serves as a user.
+
+The model has to have the data fields of
+- =email: <string>=
+- =deleted: <boolean>=
+
+and the function (on the OneModel) =checkAuthPw(password): <async>= that
+throws an error if the password does not match. The return type is not
+of further importance.
+
+Ideally, you use this functionality with the [[https://github.com/phuhl/apparts-login-server][@apparts/login-server]]
+package, that provides all the necessary REST endpoints an extendable
+user model and more.
+
+#+BEGIN_SRC js
+  const { prepauthPW: _prepauthPW } = require("@apparts/types");
+  // Create the user as described by the README of @apparts/model
+  // and import it here:
+  const { Users, User, NoUser } = require("../models/user");
+  const prepauthPW = _prepauthPW(User)
+
+  const myEndpoint = prepauthPW(
+    {
+      // assertions as with preparator
+    },
+    async ({ /*body, params, query*/ }, user, response) => {
+      // notice the second parameter: a OneModel of the logged in user
+      // as you defined earlier.
+      return "ok";
+    },
+    {
+      // options as with preparator
+    }
+  );
+#+END_SRC
+
+Requests that shall successfully be granted access must have the
+=Authorization= HTTP header with the content =Basic btoa(email:password)=
+(where =btoa(email:password)= means, a Base64 encoded string with email,
+then ":", then password).
+
+Endpoints that use =prepauthPW= can produce the following additional
+responses:
+
+- HTTP Status: 401, Body: ={ "error": "User not found" }= :: The user was
+  not found in the database, or the password was wrong
+- HTTP Status: 400, Body: ={ "error": "Authorization wrong" }= :: The
+  =Authorization= header is not properly formated
+
+*** Bearer Auth with =prepauthToken=
+
+For this function, you need to install the package [[https://github.com/phuhl/apparts-model][@apparts/model]] and
+define a model that serves as a user.
+
+The model has to have the data fields of
+- =email: <string>=
+- =deleted: <boolean>=
+
+and the function (on the OneModel) =checkAuth(token): <async>= that
+throws an error if the token does not match. The return type is not
+of further importance.
+
+Ideally, you use this functionality with the [[https://github.com/phuhl/apparts-login-server][@apparts/login-server]]
+package, that provides all the necessary REST endpoints an extendable
+user model and more.
+
+#+BEGIN_SRC js
+  const { prepauthToken: _prepauthToken } = require("@apparts/types");
+
+  // Create the user as described by the README of @apparts/model
+  // and import it here:
+  const { Users, User, NoUser } = require("../models/user");
+  const prepauthToken = _prepauthToken(User);
+
+  const myEndpoint = prepauthToken(
+    {
+      // assertions as with preparator
+    },
+    async ({ /*body, params, query*/ }, user, response) => {
+      // notice the second parameter: a OneModel of the logged in user
+      // as you defined earlier.
+      return "ok";
+    },
+    {
+      // options as with preparator
+    }
+  );
+#+END_SRC
+
+Requests that shall successfully be granted access must have the
+=Authorization= HTTP header with the content =Bearer <token>=.
+
+Endpoints that use =prepauthToken= can produce the following additional
+responses:
+
+- HTTP Status: 401, Body: ={ "error": "User not found" }= :: The user was
+  not found in the database, or the password was wrong
+- HTTP Status: 400, Body: ={ "error": "Authorization wrong" }= :: The
+  =Authorization= header is not properly formated
+
+*** Bearer Auth with =prepauthTokenJWT=
+
+For this function, you need to install the package [[https://www.npmjs.com/package/jsonwebtoken][jsonwebtoken]].
+
+#+BEGIN_SRC js
+  const { prepauthTokenJWT } = require("@apparts/types");
+
+  // Create the user as described by the README of @apparts/model
+  // and import it here:
+  const { Users, User, NoUser } = require("../models/user");
+
+  const WEBTOKENKEY = "...";
+
+  const myEndpoint = prepauthTokenJWT(WEBTOKENKEY)(
+    {
+      // assertions as with preparator
+    },
+    async ({ /*body, params, query*/ }, user, response) => {
+      // notice the second parameter: a OneModel of the logged in user
+      // as you defined earlier.
+      return "ok";
+    },
+    {
+      // options as with preparator
+    }
+  );
+#+END_SRC
+
+Requests that shall successfully be granted access must have the
+=Authorization= HTTP header with the content =Bearer <JWT>=.
+
+The JWT must have a field =action= with the value ="login"=. The webtoken
+key used on token generation must obviously match the one, that the
+server is given in the code example above.
+
+Endpoints that use =prepauthTokenJWT= can produce the following additional
+responses:
+
+- HTTP Status: 401, Body: ={ "error": "Unauthorized" }= :: The token is
+  not present or the token does not have the necessary =action= field.
+- HTTP Status: 401, Body: ={ "error": "Token invalid" }= :: The
+  JWT is not properly formated or can not be validated against the
+  webtoken key.
+
+* Generate API documentation
+
+Create a file =genApiDocs.js=:
+#+BEGIN_SRC js
+const addRoutes = require("./routes");
+const express = require("express");
+const {
+  genApiDocs: { getApi, apiToHtml, apiToOpenApi },
+} = require("@apparts/types");
+
+const app = express();
+addRoutes(app);
+
+const docs = apiToHtml(getApi(app));
+
+// Also available: docs in the open api format
+//const openApiDocs = apiToOpenApi(getApi(app));
+
+console.log(docs);
+#+END_SRC
+
+Then, run:
+
+#+BEGIN_SRC sh
+node genApiDocs.js > api.html
+#+END_SRC
+
+See your Api-documentation in the generated =api.html= file.
+
+* Test API Types
+
+Use =checkType= to check that the returned data has the format that
+you expect. Use =allChecked= to make sure, that all of your type
+definitions have occurred at least once in your tests.
+
+For =checkType=, you need to define a type definition for your
+endpoint. You do that by assigning a =returns= array to the endpoint
+function like shown above. The =returns= has the form of:
+
+Object with:
+- status :: Expected status code
+- One of
+  - error :: Expected error text, as returned by =HttpError= from the
+    "@apparts/error" package
+    - When an error key is used, the response will exclude the field
+      =description= of the response body from the check. This allows
+      to optionally put dynamic content into the =description= field, to
+      elaborate further on the error
+  - type :: A type as described in Section "Types".
+
+Functions:
+- =useChecks : <(functionContainer) => { checkType, allChecked}>= ::
+  Returns the functions needed to perform checks 
+  - Parameters:
+    - =funktionContainer= <object> :: An object that contains the tested
+      function under the key as specified in =functionName=
+  - Returns:
+    - Object with keys:
+      - =checkType : <(response, functionName, options) => boolean>= :: Checks if
+        type is allowed.
+        - Parameters:
+          - =response= :: The response, that should be checked
+          - =functionName <string>= :: The name of the function
+          - =options <object>= :: Optional options object
+            - =explainError <boolean> = false= :: If true, prints an
+              explanation on error.
+        - Returns:
+          - =true= :: Check passed
+        - Throws:
+          - An Error when checks have not passed
+      - =allChecked : <(functionName) => boolean>= :: Check if all
+        possible return combinations have been checked
+        - Parameters:
+          - =functionName <string>= :: The name of the function
+        - Returns:
+          - =true= :: All possible return combinations for the given
+            function have been tested
+        - Throws:
+          - An Error when checks have not passed
+
+#+BEGIN_SRC js
+  const { useChecks } = require("@apparts/types");
+  const request = require("supertest");
+
+  const myEndpoint = require("./myEndpoint");
+
+  const { checkType, allChecked } = useChecks(myEndpoint);
+  ///const app = ...;
+
+
+  describe("myEndpoint", () => {
+    const functionName = "myEndpoint";
+    test("Test with default name", async () => {
+      const response = await request(app).post("/v/1/endpoint/3");
+      checkType(response, functionName);
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toBe("ok");
+    });
+    test("Test with too long name", async () => {
+      const response = await request(app).post("/v/1/endpoint/3")
+        .send({ name: "x".repeat(200) });
+      checkType(response, functionName);
+      expect(response.statusCode).toBe(400);
+    });
+    test("Test with filter", async () => {
+      const response = await request(app).post("/v/1/endpoint/3?filter=4");
+      checkType(response, functionName);
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toMatchObject({
+        arr: [{ a: 1 }, { a: 2}],
+        boo: true
+      });
+    });
+    test("All possible responses tested", () => {
+      allChecked(functionName);
+    });
+  });
+#+END_SRC

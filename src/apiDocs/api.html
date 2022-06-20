@@ -1,0 +1,477 @@
+
+<!DOCTYPE html>
+<!-- Commit hash: testcommithash -->
+<html>
+  <head>
+    <style>
+      
+:root {
+  --dark-0: #0e0e0c;
+  --dark-1: #292923;
+  --dark-2: #45453a;
+  --dark-3: #616152;
+  --dark-4: #7c7c69;
+
+  --bright-0: #adad9e;
+  --bright-1: #c0c0b5;
+  --bright-2: #d4d4cc;
+  --bright-3: #e7e7e3;
+  --bright-4: #fafaf9;
+
+  --primary-0: #5e5108;
+  --primary-1: #7d6c0b;
+  --primary-2: #9c870e;
+  --primary-3: #bba111;
+  --primary-4: #dabc14;
+  --primary-5: #ebcd25;
+  --primary-6: #eed444;
+  --primary-7: #f1dc63;
+  --primary-8: #f4e382;
+  --primary-9: #f7eaa2;
+
+  --secondary-0: #425511;
+  --secondary-1: #587216;
+  --secondary-2: #6e8e1c;
+  --secondary-3: #84aa22;
+  --secondary-4: #9ac727;
+  --secondary-5: #abd838;
+  --secondary-6: #b7dd55;
+  --secondary-7: #c3e371;
+  --secondary-8: #cfe98d;
+  --secondary-9: #dbeeaa;
+
+  --green-0: #145214;
+  --green-1: #248f24;
+  --green-2: #33cc33;
+  --green-3: #70db70;
+  --green-4: #adebad;
+
+  --yellow-0: #565610;
+  --yellow-1: #96971c;
+  --yellow-2: #d7d728;
+  --yellow-3: #e3e369;
+  --yellow-4: #efefa9;
+
+  --red-0: #521414;
+  --red-1: #8f2424;
+  --red-2: #cc3333;
+  --red-3: #db7070;
+  --red-4: #ebadad;
+}
+
+body {
+  background: var(--bright-5);
+  font-family: sans-serif;
+}
+* {
+  line-height: 1.5rem;
+}
+section {
+  background: rgba(0,0,0,0.05);
+  padding: 40px;
+  border-radius: 10px;
+  margin: 20px 0px 20px 0px;
+}
+.path {
+  font-weight: bold;
+  color: var(--primary-1);
+}
+.version {
+  color: var(--green-1);
+}
+.method {
+  color: var(--secondary-2);
+}
+.type {
+  color: var(--primary-3);
+}
+.funcName {
+  font-size: 8px;
+  color: gray;
+}
+.error {
+  font-weight: bold;
+  color: red;
+}
+.returns, .usage {
+  font-weight: bold;
+}
+.docs {
+  max-width: 800px;
+  margin: auto;
+}
+.toc {
+  margin: 20px 20px 100px 20px;
+  padding: 20px;
+  background: var(--bright-3);
+  border-radius: 10px;
+}
+.toc .method {
+  min-width: 60px;
+  text-align: right;
+  display: inline-block;
+}
+.toc .link {
+  text-decoration: underline;
+}
+li {
+  margin-bottom: 10px;
+}
+h2{
+}
+.toc code {
+  display: inline-block;
+  margin: 5px;
+}
+.toc a {
+  margin: 20px;
+  color: var(--primary-1);
+  display: block;
+  text-decoration: none;
+}
+code {
+  font-family: mono, monospace;
+  background: var(--bright-2);
+  padding: 2px;
+  border-radius: 4px;
+}
+
+code.block, pre code {
+  display: block;
+  padding: 4px 10px;
+}
+
+span.code {
+  font-family: mono, monospace;
+}
+
+@media (min-width: 1000px) {
+  .docs:first-of-type {
+    position: fixed;
+    width: min(48vw, 600px);
+    max-height: 100vh;
+    overflow-y: scroll;
+  }
+  .docs:last-of-type {
+    max-width: 50vw;
+    margin-left: min(48vw,600px);
+    margin-right: unset;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="docs" >
+      <h2>Contents:</h2>
+      <div class="toc">
+        <a href="#post_/v/1/endpoint/:id">
+  <span class="version">v1</span>
+  <span class="link">Testendpoint for multiple purposes</span><br/>
+             &nbsp;&nbsp;<span class="method">POST</span><code class="block">/v/1/endpoint/:id</code>
+  </a><a href="#post_/v/1/faultyendpoint/:id">
+  <span class="version">v1</span>
+  <span class="link">Faulty Testendpoint</span><br/>
+             &nbsp;&nbsp;<span class="method">POST</span><code class="block">/v/1/faultyendpoint/:id</code>
+  </a><a href="#post_/v/1/typelessendpoint">
+  <span class="version">v1</span>
+  <span class="link">Typeless endpoint</span><br/>
+             &nbsp;&nbsp;<span class="method">POST</span><code class="block">/v/1/typelessendpoint</code>
+  </a><a href="#post_/v/1/cantdecide">
+  <span class="version">v1</span>
+  <span class="link">OneOf endpoint</span><br/>
+             &nbsp;&nbsp;<span class="method">POST</span><code class="block">/v/1/cantdecide</code>
+  </a><a href="#delete_/v/1/withpw">
+  <span class="version">v1</span>
+  <span class="link">Endpoint with Pw Authentication</span><br/>
+             &nbsp;&nbsp;<span class="method">DELETE</span><code class="block">/v/1/withpw</code>
+  </a><a href="#patch_/v/1/withtoken">
+  <span class="version">v1</span>
+  <span class="link">Endpoint with Token Authentication</span><br/>
+             &nbsp;&nbsp;<span class="method">PATCH</span><code class="block">/v/1/withtoken</code>
+  </a><a href="#put_/v/1/withjwt">
+  <span class="version">v1</span>
+  <span class="link">Endpoint with JWT Authentication</span><br/>
+             &nbsp;&nbsp;<span class="method">PUT</span><code class="block">/v/1/withjwt</code>
+  </a><a href="#get_/v/1/error">
+  <span class="version">v1</span>
+  <span class="link">Error checkpoint endpoint</span><br/>
+             &nbsp;&nbsp;<span class="method">GET</span><code class="block">/v/1/error</code>
+  </a>
+      </div>
+    </div>
+    <div class="docs" >
+     <h2>Endpoints:</h2>
+    <section id="post_/v/1/endpoint/:id">
+   <h3><span class="version">v1</span>
+Testendpoint for multiple purposes</h3>
+   <p >Behaves radically different, based on what
+ the filter is.</p>
+   <div class="api">
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/endpoint/:id</span><br/>
+     <ul>
+     
+
+     
+        <li>Body: <br><ul>
+                                                               <li><code class="block">/* A name */ <br/>name: <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
+        </li></ul></li>
+        <li>Query: <br><ul>
+                                                               <li><code class="block">filter: ? <span class="type">&lt;string&gt;</span></code></li>
+        </li>
+                                                               <li><code class="block">number: <span class="type">&lt;int&gt;</span> (= 0)</code></li>
+        </li></ul></li>
+        <li>Params: <br><ul>
+                                                               <li><code class="block">id: <span class="type">&lt;id&gt;</span></code></li>
+        </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 200
+        <code class="block">"ok"</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Name too long" }</code></li>
+        
+        <li>Status: 200
+        <code class="block">{<br/><br/>&nbsp;&nbsp;/* Some text */ <br/>&nbsp;&nbsp;"foo": "really!",<br/>&nbsp;&nbsp;"boo": <span class="type">&lt;bool&gt;</span>,<br/>&nbsp;&nbsp;"kabaz": ? <span class="type">&lt;bool&gt;</span>,<br/><br/>&nbsp;&nbsp;/* This is an array */ <br/>&nbsp;&nbsp;"arr": [<br/>&nbsp;&nbsp;&nbsp;&nbsp;/* Some array item text */ <br/>&nbsp;&nbsp;&nbsp;&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"a": <span class="type">&lt;int&gt;</span>,<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"c": ? {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"d": <span class="type">&lt;int&gt;</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"e": ? <span class="type">&lt;int&gt;</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;],<br/><br/>&nbsp;&nbsp;/* Quod illo quos excepturi alias qui. Illo non laudantium <br/>&nbsp;&nbsp;&nbsp;&nbsp; commodi. Est quos consequatur debitis in. Iusto fugiat sunt <br/>&nbsp;&nbsp;&nbsp;&nbsp; sit. Dolorem quod eius sit non. */ <br/>&nbsp;&nbsp;"objectWithUnknownKeys": {<br/>&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">&lt;/&gt;</span>: <span class="type"><span class="type">&lt;int&gt;</span></span><br/>&nbsp;&nbsp;},<br/>&nbsp;&nbsp;"objectWithUnknownKeysAndUnknownTypes": {<br/>&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">&lt;/&gt;</span>: <span class="type"><span class="type">&lt;/&gt;</span></span><br/>&nbsp;&nbsp;}<br/>}</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await post("endpoint/$1", [ id ])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({ filter, number })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({ name })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "Name too long" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="post_/v/1/faultyendpoint/:id">
+   <h3><span class="version">v1</span>
+Faulty Testendpoint</h3>
+   <p >Ment to be found to be faulty. It's documentation
+does not match it's behavior.</p>
+   <div class="api">
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/faultyendpoint/:id</span><br/>
+     <ul>
+     
+
+     
+        <li>Body: <br><ul>
+                                                               <li><code class="block">/* A name */ <br/>name: <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
+        </li></ul></li>
+        <li>Query: <br><ul>
+                                                               <li><code class="block">filter: ? <span class="type">&lt;string&gt;</span></code></li>
+        </li></ul></li>
+        <li>Params: <br><ul>
+                                                               <li><code class="block">id: <span class="type">&lt;id&gt;</span></code></li>
+        </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 200
+        <code class="block">"ok"</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Name too long" }</code></li>
+        
+        <li>Status: 200
+        <code class="block">{<br/>&nbsp;&nbsp;"boo": <span class="type">&lt;bool&gt;</span>,<br/>&nbsp;&nbsp;"arr": [<br/>&nbsp;&nbsp;&nbsp;&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"a": <span class="type">&lt;int&gt;</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;]<br/>}</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await post("faultyendpoint/$1", [ id ])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({ filter })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({ name })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "Name too long" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="post_/v/1/typelessendpoint">
+   <h3><span class="version">v1</span>
+Typeless endpoint</h3>
+   <p >This endpoint is typeless but not pointless.</p>
+   <div class="api">
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/typelessendpoint</span><br/>
+     <ul>
+     
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await post("typelessendpoint", [&nbsp;&nbsp;]);<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="post_/v/1/cantdecide">
+   <h3><span class="version">v1</span>
+OneOf endpoint</h3>
+   <p >This endpoint can't decide what it wants.</p>
+   <div class="api">
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/cantdecide</span><br/>
+     <ul>
+     
+
+     
+        <li>Body: <br><ul>
+                                                               <li><code class="block">value: (<br/><br/>&nbsp;&nbsp;/* One option */ <br/>&nbsp;&nbsp;<span class="type">&lt;int&gt;</span> |<br/><br/>&nbsp;&nbsp;/* Another option */ <br/>&nbsp;&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">&lt;/&gt;</span>: <span class="type"><span class="type">&lt;/&gt;</span></span><br/>&nbsp;&nbsp;}<br/>)</code></li>
+        </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await post("cantdecide", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({ value });<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="delete_/v/1/withpw">
+   <h3><span class="version">v1</span>
+Endpoint with Pw Authentication</h3>
+   <p >You shall not pass, unless you have a password.</p>
+   <div class="api">
+     <strong class="method">DELETE</strong>
+     <span class="path">/v/1/withpw</span><br/>
+     <ul>
+     
+        <li>Header:
+            <ul>
+        <li>
+        <code class="block">Authorization: Basic btoa(uname:password)</code>
+        </li>
+        </ul>
+        </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 401
+        <code class="block">{ "error": "User not found" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Authorization wrong" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await delete("withpw", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.auth(user)<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "User not found" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "Authorization wrong" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="patch_/v/1/withtoken">
+   <h3><span class="version">v1</span>
+Endpoint with Token Authentication</h3>
+   <p >You shall not pass, unless you have a token.</p>
+   <div class="api">
+     <strong class="method">PATCH</strong>
+     <span class="path">/v/1/withtoken</span><br/>
+     <ul>
+     
+        <li>Header:
+            <ul>
+        <li>
+        <code class="block">Authorization: Basic btoa(uname:token)</code>
+        </li>
+        </ul>
+        </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 401
+        <code class="block">{ "error": "User not found" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Authorization wrong" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await patch("withtoken", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.auth(user)<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "User not found" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "Authorization wrong" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="put_/v/1/withjwt">
+   <h3><span class="version">v1</span>
+Endpoint with JWT Authentication</h3>
+   <p >You shall not pass, unless you have a JWT.</p>
+   <div class="api">
+     <strong class="method">PUT</strong>
+     <span class="path">/v/1/withjwt</span><br/>
+     <ul>
+     
+        <li>Header:
+            <ul>
+        <li>
+        <code class="block">Authorization: Bearer jwt</code>
+        </li>
+        </ul>
+        </li>
+        
+
+     
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 401
+        <code class="block">{ "error": "Unauthorized" }</code></li>
+        
+        <li>Status: 401
+        <code class="block">{ "error": "Token invalid" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await put("withjwt", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.auth(user)<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "Unauthorized" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "Token invalid" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="get_/v/1/error">
+   <h3><span class="version">v1</span>
+Error checkpoint endpoint</h3>
+   <p >This endpoint is full of errors.</p>
+   <div class="api">
+     <strong class="method">GET</strong>
+     <span class="path">/v/1/error</span><br/>
+     <ul>
+     
+
+     
+        <li>Query: <br><ul>
+                                                               <li><code class="block">error: <span class="type">&lt;bool&gt;</span></code></li>
+        </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 400
+        <code class="block">{ "error": "Text 1" }</code></li>
+        
+        <li>Status: 400
+        <code class="block">{ "error": "Fieldmissmatch" }</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await get("error", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({ error })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "Text 1" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section>
+    </div>
+  </body>
+</html>
+
+  
