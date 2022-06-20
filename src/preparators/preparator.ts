@@ -1,28 +1,35 @@
-"use strict";
-
 import { v1 as uuidv1 } from "uuid";
 import {
   types,
   checkType as recursiveCheck,
   explainCheck,
+  //  Schema,
+  Type,
 } from "@apparts/types";
 import assertionType from "../apiTypes/preparatorAssertionType";
 import returnType from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
 
-const has = (...ps) => Object.hasOwnProperty.call(...ps);
+type PrepOptions = {
+  strap?: boolean;
+  returns: ({
+    code: number;
+  } & ({
+    error: string;
+    description?: string;
+  } & Type))[];
 
-/**
- * Stuffs type-assertions before the call of the 'next'-function
- * @param {Object} assertions
- * @callback next recieves (request) and must return Promise
- * @param {Object} [options] Options
- * @param {bool} [options.strap] If true all parameters will be
- * strapped out of the request, if they where not specified in
- * assertions
- */
-export const prepare = (assertions, next, options = {}) => {
+  /*    | {
+        schema: Schema<any, any>;
+      }*/
+};
+
+export const prepare = (
+  assertions,
+  next,
+  options: PrepOptions = { returns: [] }
+) => {
   const fields = assertions;
 
   const assError = explainCheck(fields, assertionType);
@@ -53,7 +60,7 @@ export const prepare = (assertions, next, options = {}) => {
     if (options.strap) {
       for (const fieldName in fields) {
         for (const key in req[fieldName]) {
-          if (!has(fields[fieldName], key)) {
+          if (!(key in fields[fieldName])) {
             delete req[fieldName][key];
           }
         }
@@ -62,7 +69,7 @@ export const prepare = (assertions, next, options = {}) => {
 
     for (const fieldName in fields) {
       /* istanbul ignore next */
-      if (!has(req, fieldName)) {
+      if (!(fieldName in req)) {
         req[fieldName] = {};
       }
       let valid;
@@ -159,9 +166,9 @@ const check = (wanted, given, field) => {
   for (let i = 0; i < keys.length; i++) {
     const param = keys[i];
 
-    const exists = has(given, param) && given[param] !== undefined;
+    const exists = param in given && given[param] !== undefined;
     if (!exists) {
-      if (has(wanted[param], "default")) {
+      if ("default" in wanted[param]) {
         given[param] = wanted[param]["default"];
         continue;
       }
@@ -204,6 +211,8 @@ const constructErrorObj = (req, error) => {
     ID: uuidv1(),
     USER: req.get("Authorization") || "",
     REQUEST: {
+      body: null,
+      params: null,
       url: req.originalUrl,
       method: req.method,
       ip: req.ip,
