@@ -194,7 +194,6 @@ describe("myEndpoint, the missing tests", () => {
         name: "x".repeat(200),
       });
     expect(checkType(response, "myEndpoint")).toBeTruthy();
-    console.log("test wiith too long n");
     expect(response.statusCode).toBe(400);
   });
   test("Test with default name", async () => {
