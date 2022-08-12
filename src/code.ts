@@ -40,6 +40,4 @@ export const httpCodeSchema = <
 
 export class DontRespond {
   public readonly type = "DontRespond";
-
-  constructor() {}
 }
