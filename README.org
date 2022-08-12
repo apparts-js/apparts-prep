@@ -58,7 +58,7 @@ The =preparator= function takes these arguments:
   anything else, a 500 server error will be produced.
 
 #+BEGIN_SRC js
-  const { preparator, HttpError } = require("@apparts/prep");
+  const { preparator, HttpError, httpErrorSchema } = require("@apparts/prep");
 
   const myEndpoint = preparator(
     {
@@ -138,12 +138,17 @@ The =preparator= function takes these arguments:
 Within the =route= function you can use the =HttpCode= class as follows:
 
 #+BEGIN_SRC js
-const { HttpCode } = require("@apparts/prep");
+  const { preparator, HttpCode, httpCodeSchema } = require("@apparts/prep");
+  const { obj, string } = require("@apparts/types");
 
-// ...
-const myData = { "whatever": "i want" };
-return new HttpCode(304, myData);
-// ...
+  const myEndpoint = preparator({
+    title: "Endpoint that handles responding",
+    /* ...*/
+    returns: [httpCodeSchema(304, obj({ "whatever": string() }))],
+  }, async () => {
+    const myData = { "whatever": "i want" };
+    return new HttpCode(304, myData);
+  });
 #+END_SRC
 
 ** Sending HttpErrors
@@ -151,28 +156,40 @@ return new HttpCode(304, myData);
 Within the =route= function you can use the =HttpError= class as follows:
 
 #+BEGIN_SRC js
-  const { HttpError } = require("@apparts/prep");
+  const { preparator, HttpError, httpErrorSchema } = require("@apparts/prep");
+  const { obj, string } = require("@apparts/types");
 
-  // error with description
-  return new HttpError(
-    400,
-    "You specified that parameter wrong",
-    "Some dynamic info: " + somethingWrong);
-  // --> http-statuscode 400, body: {
-  //   error: "You specified that parameter wrong",
-  //   description: "Some dynamic info: blub"
-  // }
+  const myEndpoint = preparator({
+    title: "Endpoint that handles responding",
+    /* ...*/
+    returns: [
+      httpErrorSchema(403, "Nope"),
+      httpErrorSchema(400, "You specified that parameter wrong"),
+      httpErrorSchema(404, "My element not found"),
+      httpErrorSchema(412, "Want to throw"),
+    ],
+  }, async () => {
+    return new HttpError(403, "Nope");
+    // --> http-statuscode 403, body: { }
 
-  return new HttpError(403);
-  // --> http-statuscode 403, body: { }
+    // error with description
+    return new HttpError(
+      400,
+      "You specified that parameter wrong",
+      "Some dynamic info: " + somethingWrong);
+    // --> http-statuscode 400, body: {
+    //   error: "You specified that parameter wrong",
+    //   description: "Some dynamic info: blub"
+    // }
 
-  // shorthand for 404
-  return HttpError.notFound("My element"); 
-  // --> http-statuscode 404, body: { error: "My element not found" }
+    // shorthand for 404
+    return HttpError.notFound("My element"); 
+    // --> http-statuscode 404, body: { error: "My element not found" }
 
-  // can be thrown
-  throw new HttpError(412, "Want to throw");  
-  // --> http-statuscode 412, body: { error: "Want to throw" }
+    // can be thrown
+    throw new HttpError(412, "Want to throw");  
+    // --> http-statuscode 412, body: { error: "Want to throw" }
+  });
 #+END_SRC
 
 You can return or throw an error.
