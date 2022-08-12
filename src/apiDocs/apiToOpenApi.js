@@ -34,6 +34,7 @@ const typeToSchemaType = (type) =>
     float: { type: "number", format: "double" },
     hex: { type: "string", format: "hex" },
     base64: { type: "string", format: "byte" },
+    boolean: { type: "boolean" },
     bool: { type: "boolean" },
     string: { type: "string" },
     email: { type: "string", format: "email" },
