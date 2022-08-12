@@ -3,7 +3,7 @@
 #+AUTHOR: Philipp Uhl
 
 This package provides type-checking for [[https://www.npmjs.com/package/express][express]] servers, test helpers
-and documentation generation.
+and documentation generation. The package has full Typescript support.
 
 The type definitions used are from [[https://github.com/apparts-js/apparts-types][@apparts/types]].
 
@@ -58,6 +58,7 @@ The =preparator= function takes these arguments:
   anything else, a 500 server error will be produced.
 
 #+BEGIN_SRC js
+  const { boolean, value, obj, int, objValues } = require("@apparts/types");
   const { preparator, HttpError, httpErrorSchema } = require("@apparts/prep");
 
   const myEndpoint = preparator(
@@ -282,15 +283,11 @@ For this function, you need to install the package [[https://www.npmjs.com/packa
 
   const myEndpoint = prepauthTokenJWT(WEBTOKENKEY)(
     {
-      // assertions as with preparator
-    },
-    async ({ /*body, params, query*/ }, user, response) => {
-      // notice the second parameter: a OneModel of the logged in user
-      // as you defined earlier.
-      return "ok";
-    },
-    {
       // options as with preparator
+    },
+    async ({ /*body, params, query*/ }, jwtContent, response) => {
+      // notice the second parameter: the content of your JWT
+      return "ok";
     }
   );
 #+END_SRC
@@ -310,6 +307,16 @@ responses:
 - HTTP Status: 401, Body: ={ "error": "Token invalid" }= :: The
   JWT is not properly formated or can not be validated against the
   webtoken key.
+
+When using Typescript you can add a type to the =jwtContent= like this:
+#+BEGIN_SRC js
+  const myEndpoint = prepauthTokenJWT<MyJwtContent>(WEBTOKENKEY)(
+    { /*...*/ },
+    async (req, jwtContent /* of type MyJwtContent */, res) => {
+      return "ok";
+    }
+  );
+#+END_SRC
 
 * Generate API documentation
 
