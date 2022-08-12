@@ -251,33 +251,35 @@ const Route = ({
             </li>
           )}
 
-          {Object.keys(assertions).map((type, i) => (
-            <li key={i}>
-              {type.slice(0, 1).toUpperCase() + type.slice(1)}: <br />
-              <ul>
-                {Object.keys(assertions[type]).map((key) => (
-                  <li key={key}>
-                    <code className="block">
-                      <span
-                        className="code"
-                        dangerouslySetInnerHTML={{
-                          __html: htmlifyLines(
-                            printDescription(assertions[type][key], 0)
-                          ),
-                        }}
-                      ></span>
-                      {key}: <Type {...assertions[type][key]} />
-                      {assertions[type][key].default !== undefined
-                        ? ` (= ${JSON.stringify(
-                            assertions[type][key].default
-                          )})`
-                        : ""}
-                    </code>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
+          {Object.keys(assertions)
+            .filter((type) => Object.keys(assertions[type]).length > 0)
+            .map((type, i) => (
+              <li key={i}>
+                {type.slice(0, 1).toUpperCase() + type.slice(1)}: <br />
+                <ul>
+                  {Object.keys(assertions[type]).map((key) => (
+                    <li key={key}>
+                      <code className="block">
+                        <span
+                          className="code"
+                          dangerouslySetInnerHTML={{
+                            __html: htmlifyLines(
+                              printDescription(assertions[type][key], 0)
+                            ),
+                          }}
+                        ></span>
+                        {key}: <Type {...assertions[type][key]} />
+                        {assertions[type][key].default !== undefined
+                          ? ` (= ${JSON.stringify(
+                              assertions[type][key].default
+                            )})`
+                          : ""}
+                      </code>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
         </ul>
         <span className="returns">Returns:</span> <br />
         <ul>

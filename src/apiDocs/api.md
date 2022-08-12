@@ -9,8 +9,6 @@ Commit hash: testcommithash
 - [v1 - POST Faulty Testendpoint /v/1/faultyendpoint/:id](#v1-faulty-testendpoint)
 - [v1 - POST Typeless endpoint /v/1/typelessendpoint](#v1-typeless-endpoint)
 - [v1 - POST OneOf endpoint /v/1/cantdecide](#v1-oneof-endpoint)
-- [v1 - DELETE Endpoint with Pw Authentication /v/1/withpw](#v1-endpoint-with-pw-authentication)
-- [v1 - PATCH Endpoint with Token Authentication /v/1/withtoken](#v1-endpoint-with-token-authentication)
 - [v1 - PUT Endpoint with JWT Authentication /v/1/withjwt](#v1-endpoint-with-jwt-authentication)
 - [v1 - GET Error checkpoint endpoint /v/1/error](#v1-error-checkpoint-endpoint)
 ## Endpoints
@@ -26,27 +24,27 @@ Behaves radically different, based on what
 **Path:** `/v/1/endpoint/:id`
 
 - **Body:**
-  - name:
+                                         - name:
     ```
     <string> (= "no name")
     ```
-
-- **Query:**
-  - filter:
-    ```
-    ? <string>
-    ```
-  - number:
-    ```
-    <int> (= 0)
-    ```
-
+                                                       
 - **Params:**
-  - id:
+                                         - id:
     ```
     <id>
     ```
-
+                                                       
+- **Query:**
+                                         - filter:
+    ```
+    ? <string>
+    ```
+                                                         - number:
+    ```
+    <int> (= 0)
+    ```
+                                                       
 - **Returns:**
   - Status: 200
     ```
@@ -54,14 +52,17 @@ Behaves radically different, based on what
     ```
   - Status: 400
     ```
-    { "error": "Name too long" }
+    {
+      "error": "Name too long",
+      "description": ? <string>
+    }
     ```
   - Status: 200
     ```
     {
       "foo": "really!",
-      "boo": <bool>,
-      "kabaz": ? <bool>,
+      "boo": <boolean>,
+      "kabaz": ? <boolean>,
       "arr": [
         {
           "a": <int>,
@@ -81,7 +82,10 @@ Behaves radically different, based on what
     ```
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
@@ -89,7 +93,10 @@ try {
   const response = await post("endpoint/$1", [ id ])
     .query({ filter, number })
     .data({ name })
-    .on({ status: 400, error: "Name too long" }, () => {
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {
@@ -108,23 +115,23 @@ does not match it's behavior.
 **Path:** `/v/1/faultyendpoint/:id`
 
 - **Body:**
-  - name:
+                                         - name:
     ```
     <string> (= "no name")
     ```
-
-- **Query:**
-  - filter:
-    ```
-    ? <string>
-    ```
-
+                                                       
 - **Params:**
-  - id:
+                                         - id:
     ```
     <id>
     ```
-
+                                                       
+- **Query:**
+                                         - filter:
+    ```
+    ? <string>
+    ```
+                                                       
 - **Returns:**
   - Status: 200
     ```
@@ -132,12 +139,15 @@ does not match it's behavior.
     ```
   - Status: 400
     ```
-    { "error": "Name too long" }
+    {
+      "error": "Name too long",
+      "description": ? <string>
+    }
     ```
   - Status: 200
     ```
     {
-      "boo": <bool>,
+      "boo": <boolean>,
       "arr": [
         {
           "a": <int>
@@ -147,7 +157,10 @@ does not match it's behavior.
     ```
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
@@ -155,7 +168,10 @@ try {
   const response = await post("faultyendpoint/$1", [ id ])
     .query({ filter })
     .data({ name })
-    .on({ status: 400, error: "Name too long" }, () => {
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {
@@ -175,12 +191,20 @@ This endpoint is typeless but not pointless.
 - **Returns:**
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
 try {
-  const response = await post("typelessendpoint", [  ]);
+  const response = await post("typelessendpoint", [  ])
+    .query({  })
+    .data({  })
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    });
 } catch (e) {
   // If e is not false, then no error-catcher caught the error and
   // you might want to take care of it
@@ -196,7 +220,7 @@ This endpoint can't decide what it wants.
 **Path:** `/v/1/cantdecide`
 
 - **Body:**
-  - value:
+                                         - value:
     ```
     (
       <int>
@@ -205,97 +229,26 @@ This endpoint can't decide what it wants.
       }
     )
     ```
-
+                                                       
 - **Returns:**
+  - Status: 200
+    ```
+    "ok"
+    ```
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
 try {
   const response = await post("cantdecide", [  ])
-    .data({ value });
-} catch (e) {
-  // If e is not false, then no error-catcher caught the error and
-  // you might want to take care of it
-  e && alert(e);
-}
-```
-### v1 Endpoint with Pw Authentication
-
-You shall not pass, unless you have a password.
-
-**Method:** `DELETE`
-
-**Path:** `/v/1/withpw`
-
-- **Header:**
-  - Authorization: Basic btoa(uname:password)
-        
-- **Returns:**
-  - Status: 401
-    ```
-    { "error": "User not found" }
-    ```
-  - Status: 400
-    ```
-    { "error": "Authorization wrong" }
-    ```
-  - Status: 400
-    ```
-    { "error": "Fieldmissmatch" }
-    ```
-- **Usage:**
-```js
-try {
-  const response = await delete("withpw", [  ])
-    .auth(user)
-    .on({ status: 401, error: "User not found" }, () => {
-       /* handle error */
-    })
-    .on({ status: 400, error: "Authorization wrong" }, () => {
-       /* handle error */
-    });
-} catch (e) {
-  // If e is not false, then no error-catcher caught the error and
-  // you might want to take care of it
-  e && alert(e);
-}
-```
-### v1 Endpoint with Token Authentication
-
-You shall not pass, unless you have a token.
-
-**Method:** `PATCH`
-
-**Path:** `/v/1/withtoken`
-
-- **Header:**
-  - Authorization: Basic btoa(uname:token)
-        
-- **Returns:**
-  - Status: 401
-    ```
-    { "error": "User not found" }
-    ```
-  - Status: 400
-    ```
-    { "error": "Authorization wrong" }
-    ```
-  - Status: 400
-    ```
-    { "error": "Fieldmissmatch" }
-    ```
-- **Usage:**
-```js
-try {
-  const response = await patch("withtoken", [  ])
-    .auth(user)
-    .on({ status: 401, error: "User not found" }, () => {
-       /* handle error */
-    })
-    .on({ status: 400, error: "Authorization wrong" }, () => {
+    .query({  })
+    .data({ value })
+    .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {
@@ -316,27 +269,45 @@ You shall not pass, unless you have a JWT.
   - Authorization: Bearer jwt
         
 - **Returns:**
+  - Status: 200
+    ```
+    "ok"
+    ```
   - Status: 401
     ```
-    { "error": "Unauthorized" }
+    {
+      "error": "Unauthorized",
+      "description": ? <string>
+    }
     ```
   - Status: 401
     ```
-    { "error": "Token invalid" }
+    {
+      "error": "Token invalid",
+      "description": ? <string>
+    }
     ```
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
 try {
   const response = await put("withjwt", [  ])
+    .query({  })
+    .data({  })
     .auth(user)
-    .on({ status: 401, error: "Unauthorized" }, () => {
+    .on({ status: 401, error: "undefined" }, () => {
        /* handle error */
     })
-    .on({ status: 401, error: "Token invalid" }, () => {
+    .on({ status: 401, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {
@@ -354,26 +325,46 @@ This endpoint is full of errors.
 **Path:** `/v/1/error`
 
 - **Query:**
-  - error:
+                                         - error:
     ```
-    <bool>
+    <boolean>
     ```
-
+                                                       
 - **Returns:**
   - Status: 400
     ```
-    { "error": "Text 1" }
+    {
+      "error": "Text 1",
+      "description": ? <string>
+    }
     ```
   - Status: 400
     ```
-    { "error": "Fieldmissmatch" }
+    {
+      "error": "Text 1",
+      "unknownField": <string>
+    }
+    ```
+  - Status: 400
+    ```
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
     ```
 - **Usage:**
 ```js
 try {
   const response = await get("error", [  ])
     .query({ error })
-    .on({ status: 400, error: "Text 1" }, () => {
+    .data({  })
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {

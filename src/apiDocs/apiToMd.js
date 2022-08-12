@@ -66,11 +66,12 @@ const apiToMd = (api, commitHash) => {
           : "";
 
         const assertionsMd = Object.keys(assertions)
+          .filter((type) => Object.keys(assertions[type]).length > 0)
           .map(
             (type) =>
               `
 - **${type.slice(0, 1).toUpperCase() + type.slice(1)}:**
-` +
+                                       ` +
               Object.keys(assertions[type])
                 .map(
                   (key) =>
@@ -84,7 +85,7 @@ const apiToMd = (api, commitHash) => {
                         : ""
                     }
     ${"```"}
-`
+                                                       `
                 )
                 .join("")
           )

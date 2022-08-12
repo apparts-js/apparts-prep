@@ -144,6 +144,7 @@ ${title || ""}</h3>
      }
 
      ${Object.keys(assertions)
+       .filter((type) => Object.keys(assertions[type]).length > 0)
        .map(
          (type) =>
            `
