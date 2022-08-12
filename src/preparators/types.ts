@@ -34,7 +34,8 @@ export type NextFnType<
   QueryType extends Obj<any, Required>,
   ReturnTypes extends Schema<any, Required>[]
 > = (
-  req: ExpressRequest & RequestType<BodyType, ParamsType, QueryType>,
+  req: RequestType<BodyType, ParamsType, QueryType> &
+    Omit<ExpressRequest, "body" | "params" | "query">,
   res: ExpressResponse
 ) => Promise<OneOfReturnTypes<ReturnTypes>>;
 
