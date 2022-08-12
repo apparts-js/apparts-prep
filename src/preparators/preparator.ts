@@ -13,7 +13,7 @@ import assertionType from "../apiTypes/preparatorAssertionType";
 import returnType from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
-import { OptionsType, NextFnType, AssertionsType } from "./types";
+import { NextFnType, OptionsType } from "./types";
 
 export const prepare = <
   BodyType extends Obj<any, Required>,
@@ -21,16 +21,15 @@ export const prepare = <
   QueryType extends Obj<any, Required>,
   ReturnTypes extends Schema<any, Required>[]
 >(
-  assertions: AssertionsType<BodyType, ParamsType, QueryType>,
-  next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>,
-  options: OptionsType<ReturnTypes> = { title: "", returns: [] as ReturnTypes }
+  options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes>,
+  next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>
 ) => {
   const {
     body: bodySchema = obj({}),
     params: paramsSchema = obj({}),
     query: querySchema = obj({}),
     ...restAssertions
-  } = assertions;
+  } = options.receives;
   const fields = {
     body: bodySchema.getModelType(),
     params: paramsSchema.getModelType(),
@@ -129,6 +128,7 @@ export const prepare = <
     ...options,
     returns: [...returnTypes, httpErrorSchema(400, "Fieldmissmatch").getType()],
   };
+  delete f.options.receives;
   return f;
 };
 

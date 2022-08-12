@@ -10,12 +10,18 @@ export type OneOfReturnTypes<T extends Schema<any, Required>[]> = {
     : never;
 }[number];
 
-export type OptionsType<ReturnTypes> = {
-  strap?: boolean;
+export type OptionsType<
+  BodyType extends Obj<any, Required>,
+  ParamsType extends Obj<any, Required>,
+  QueryType extends Obj<any, Required>,
+  ReturnTypes extends Schema<any, Required>[]
+> = {
   title: string;
   description?: string;
+  receives: AssertionsType<BodyType, ParamsType, QueryType>;
   returns: ReturnTypes;
   auth?: string;
+  strap?: boolean;
 };
 
 export type RequestType<
@@ -26,7 +32,9 @@ export type RequestType<
   body: InferType<BodyType>;
   params: InferType<ParamsType>;
   query: InferType<QueryType>;
-};
+} & Omit<ExpressRequest, "body" | "params" | "query">;
+
+export type ResponseType = ExpressResponse;
 
 export type NextFnType<
   BodyType extends Obj<any, Required>,
@@ -34,9 +42,8 @@ export type NextFnType<
   QueryType extends Obj<any, Required>,
   ReturnTypes extends Schema<any, Required>[]
 > = (
-  req: RequestType<BodyType, ParamsType, QueryType> &
-    Omit<ExpressRequest, "body" | "params" | "query">,
-  res: ExpressResponse
+  req: RequestType<BodyType, ParamsType, QueryType>,
+  res: ResponseType
 ) => Promise<OneOfReturnTypes<ReturnTypes>>;
 
 export type AssertionsType<

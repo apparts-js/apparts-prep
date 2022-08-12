@@ -22,16 +22,43 @@ import express from "express";
 
 const myEndpoint = prepare(
   {
-    body: obj({
-      name: string().default("no name").description("A name"),
-    }),
-    query: obj({
-      filter: string().optional(),
-      number: int().default(0),
-    }),
-    params: obj({
-      id: int().semantic("id"),
-    }),
+    title: "Testendpoint for multiple purposes",
+    description: `Behaves radically different, based on what
+ the filter is.`,
+    receives: {
+      body: obj({
+        name: string().default("no name").description("A name"),
+      }),
+      query: obj({
+        filter: string().optional(),
+        number: int().default(0),
+      }),
+      params: obj({
+        id: int().semantic("id"),
+      }),
+    },
+    returns: [
+      value("ok"),
+      httpErrorSchema(400, "Name too long"),
+      obj({
+        foo: value("really!").description("Some text"),
+        boo: boolean(),
+        kabaz: boolean().optional(),
+        arr: array(
+          obj({
+            a: int(),
+            c: obj({
+              d: int(),
+            }).optional(),
+            e: int().optional(),
+          }).description("Some array item text")
+        ).description("This is an array"),
+        objectWithUnknownKeys: objValues(int()).description(
+          "Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non."
+        ),
+        objectWithUnknownKeysAndUnknownTypes: objValues(any()),
+      }),
+    ],
   },
   async ({ body: { name }, query: { filter } /*, params: { id }*/ }) => {
     if (name.length > 100) {
@@ -61,47 +88,38 @@ const myEndpoint = prepare(
     }
     // This produces "ok" (literally, with the quotes)
     return "ok";
-  },
-  {
-    title: "Testendpoint for multiple purposes",
-    description: `Behaves radically different, based on what
- the filter is.`,
-    returns: [
-      value("ok"),
-      httpErrorSchema(400, "Name too long"),
-      obj({
-        foo: value("really!").description("Some text"),
-        boo: boolean(),
-        kabaz: boolean().optional(),
-        arr: array(
-          obj({
-            a: int(),
-            c: obj({
-              d: int(),
-            }).optional(),
-            e: int().optional(),
-          }).description("Some array item text")
-        ).description("This is an array"),
-        objectWithUnknownKeys: objValues(int()).description(
-          "Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non."
-        ),
-        objectWithUnknownKeysAndUnknownTypes: objValues(any()),
-      }),
-    ],
   }
 );
 
 const myFaultyEndpoint = prepare(
   {
-    body: obj({
-      name: string().default("no name").description("A name"),
-    }),
-    query: obj({
-      filter: string().optional(),
-    }),
-    params: obj({
-      id: int().semantic("id"),
-    }),
+    title: "Faulty Testendpoint",
+    description: `Ment to be found to be faulty. It's documentation
+does not match it's behavior.`,
+
+    receives: {
+      body: obj({
+        name: string().default("no name").description("A name"),
+      }),
+      query: obj({
+        filter: string().optional(),
+      }),
+      params: obj({
+        id: int().semantic("id"),
+      }),
+    },
+    returns: [
+      value("ok"),
+      httpErrorSchema(400, "Name too long"),
+      obj({
+        boo: boolean(),
+        arr: array(
+          obj({
+            a: int(),
+          })
+        ),
+      }),
+    ],
   },
   // @ts-expect-error test type
   async ({ body: { name }, query: { filter } /*, params: { id }*/ }) => {
@@ -127,71 +145,65 @@ const myFaultyEndpoint = prepare(
       };
     }
     return "whut?";
-  },
-  {
-    title: "Faulty Testendpoint",
-    description: `Ment to be found to be faulty. It's documentation
-does not match it's behavior.`,
-    returns: [
-      value("ok"),
-      httpErrorSchema(400, "Name too long"),
-      obj({
-        boo: boolean(),
-        arr: array(
-          obj({
-            a: int(),
-          })
-        ),
-      }),
-    ],
   }
 );
 
 const myOneOfEndpoint = prepare(
   {
-    body: obj({
-      value: oneOf([
-        int().description("One option"),
-        objValues(any()).description("Another option"),
-      ]),
-    }),
+    title: "OneOf endpoint",
+    description: `This endpoint can't decide what it wants.`,
+    receives: {
+      body: obj({
+        value: oneOf([
+          int().description("One option"),
+          objValues(any()).description("Another option"),
+        ]),
+      }),
+    },
+    returns: [value("ok")],
   },
   async () => {
     return "ok" as const;
-  },
-  {
-    title: "OneOf endpoint",
-    description: `This endpoint can't decide what it wants.`,
-    returns: [value("ok")],
   }
 );
 
 const myTypelessEndpoint = prepare(
-  {},
-  async () => {
-    return "ok" as const;
-  },
   {
     title: "Typeless endpoint",
     description: `This endpoint is typeless but not pointless.`,
+    receives: {},
     returns: [],
+  },
+  async () => {
+    return "ok" as const;
   }
 );
 
 const myJWTAuthenticatedEndpoint = prepauthTokenJWT("")(
-  {},
-  async () => {
-    return "ok" as const;
-  },
   {
     title: "Endpoint with JWT Authentication",
     description: "You shall not pass, unless you have a JWT.",
+    receives: {},
     returns: [value("ok")],
+  },
+  async () => {
+    return "ok" as const;
   }
 );
 
 const myErrorCheckpoint = prepare(
-  { query: obj({ error: boolean() }) },
+  {
+    title: "Error checkpoint endpoint",
+    description: `This endpoint is full of errors.`,
+    receives: { query: obj({ error: boolean() }) },
+    returns: [
+      httpErrorSchema(400, "Text 1"),
+      httpCodeSchema(
+        400,
+        obj({ error: value("Text 1"), unknownField: string() })
+      ),
+    ],
+  },
   async ({ query: { error } }) => {
     if (error) {
       return new HttpError(400, "Text 1", "Text 2");
@@ -201,17 +213,6 @@ const myErrorCheckpoint = prepare(
         unknownField: "Some unknown text",
       });
     }
-  },
-  {
-    title: "Error checkpoint endpoint",
-    description: `This endpoint is full of errors.`,
-    returns: [
-      httpErrorSchema(400, "Text 1"),
-      httpCodeSchema(
-        400,
-        obj({ error: value("Text 1"), unknownField: string() })
-      ),
-    ],
   }
 );
 

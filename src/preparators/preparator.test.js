@@ -41,9 +41,13 @@ describe("Options.strap", () => {
       getNextUrl() + ":tooMuch/:expected",
       prepare(
         {
-          body: obj({ expected: int() }),
-          query: obj({ expected: int() }),
-          params: obj({ expected: int() }),
+          receives: {
+            body: obj({ expected: int() }),
+            query: obj({ expected: int() }),
+            params: obj({ expected: int() }),
+          },
+          returns: [],
+          strap: true,
         },
         async ({ body, query, params }) => {
           if (
@@ -57,8 +61,7 @@ describe("Options.strap", () => {
             return "nope";
           }
           return "ok";
-        },
-        { strap: true }
+        }
       )
     );
     await expectSuccess(getCurrentUrl() + "9/10?tooMuch=1&expected=11", {
@@ -72,7 +75,7 @@ describe("HttpErrors", () => {
   test("Should produce code 400 when HttpError returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         return new HttpError(400, "Bad Request");
       })
     );
@@ -81,7 +84,7 @@ describe("HttpErrors", () => {
   test("Should produce code 400 when HttpError thrown", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         throw new HttpError(400, "Bad Request");
       })
     );
@@ -91,7 +94,7 @@ describe("HttpErrors", () => {
   test("Should produce code 400 and have error field", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         return new HttpError(400, "error text");
       })
     );
@@ -100,7 +103,7 @@ describe("HttpErrors", () => {
   test("Should produce code 400 and have error, description field", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         throw new HttpError(400, "error text2", "description, too");
       })
     );
@@ -117,7 +120,7 @@ describe("Server error", () => {
 
     app.post(
       getNextUrl() + ":id",
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         throw new Error("ups");
       })
     );
@@ -157,7 +160,7 @@ describe("Server error", () => {
 
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         throw new Error("ups");
       })
     );
@@ -189,7 +192,7 @@ describe("HttpCodes", () => {
   test("Should produce code 300 when HttpCode(300) returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         return new HttpCode(300, { test: true });
       })
     );
@@ -198,7 +201,7 @@ describe("HttpCodes", () => {
   test("Should produce code 300 when HttpCode(300) with no message returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async () => {
+      prepare({ receives: {}, returns: [] }, async () => {
         return new HttpCode(300, "redirect");
       })
     );
@@ -213,7 +216,7 @@ describe("Function not async", () => {
   test("Should work with normal function as parameter", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, () => {
+      prepare({ receives: {}, returns: [] }, () => {
         return "ok";
       })
     );
@@ -226,7 +229,7 @@ describe("Unknown field", () => {
     expect(() =>
       app.post(
         getNextUrl(),
-        prepare({ sixpack: obj({ field: int() }) }, () => {
+        prepare({ receives: { sixpack: obj({ field: int() }) } }, () => {
           return "ok";
         })
       )
@@ -238,7 +241,7 @@ describe("Manually sending a response", () => {
   it("should manually send a response", async () => {
     app.post(
       getNextUrl(),
-      prepare({}, async (req, res) => {
+      prepare({ receives: {}, returns: [] }, async (req, res) => {
         res.send('"ok123"');
         return new DontRespond();
       })

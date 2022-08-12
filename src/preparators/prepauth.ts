@@ -1,13 +1,9 @@
 import { Schema, Required, Obj } from "@apparts/types";
 
 import {
-  Response as ExpressResponse,
-  Request as ExpressRequest,
-} from "express";
-import {
   OptionsType,
   RequestType,
-  AssertionsType,
+  ResponseType,
   OneOfReturnTypes,
   NextFnType,
 } from "./types";
@@ -26,19 +22,23 @@ export const prepauthTokenJWT =
     QueryType extends Obj<any, Required>,
     ReturnTypes extends Schema<any, Required>[]
   >(
-    assertions: AssertionsType<BodyType, ParamsType, QueryType>,
+    options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes>,
     next: (
-      req: ExpressRequest & RequestType<BodyType, ParamsType, QueryType>,
+      req: RequestType<BodyType, ParamsType, QueryType>,
       me: JWTType,
-      res: ExpressResponse
-    ) => Promise<OneOfReturnTypes<ReturnTypes>>,
-    options: OptionsType<ReturnTypes> = {
-      title: "",
-      returns: [] as ReturnTypes,
-    }
+      res: ResponseType
+    ) => Promise<OneOfReturnTypes<ReturnTypes>>
   ) => {
     return prepare(
-      assertions,
+      {
+        ...options,
+        auth: "Bearer jwt",
+        returns: [
+          ...options.returns,
+          httpErrorSchema(401, "Unauthorized"),
+          httpErrorSchema(401, "Token invalid"),
+        ] as ReturnTypes,
+      },
       (async (req, res) => {
         const token = bearerAuth(req);
         if (!token) {
@@ -56,16 +56,7 @@ export const prepauthTokenJWT =
         } else {
           return await next(req, jwt, res);
         }
-      }) as NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>,
-      {
-        ...options,
-        auth: "Bearer jwt",
-        returns: [
-          ...options.returns,
-          httpErrorSchema(401, "Unauthorized"),
-          httpErrorSchema(401, "Token invalid"),
-        ] as ReturnTypes,
-      }
+      }) as NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>
     );
   };
 prepauthTokenJWT.returns = [

@@ -59,41 +59,44 @@ const defPrep = (path, assumptions, tipe) => {
   lastPath++;
   app.post(
     "/a" + lastPath + "/" + path,
-    prepare(assumptions, async ({ body, query, params }) => {
-      if (tipe) {
-        const val = { ...body, ...query, ...params }["myField"];
-        switch (tipe) {
-          case "hex":
-          case "base64":
-          case "uuidv4":
-          case "string":
-          case "email":
-          case "password":
-            return typeof val === "string" ? val : "nope";
+    prepare(
+      { receives: assumptions, returns: [] },
+      async ({ body, query, params }) => {
+        if (tipe) {
+          const val = { ...body, ...query, ...params }["myField"];
+          switch (tipe) {
+            case "hex":
+            case "base64":
+            case "uuidv4":
+            case "string":
+            case "email":
+            case "password":
+              return typeof val === "string" ? val : "nope";
 
-          case "id":
-          case "int":
-          case "float":
-          case "time":
-            return typeof val === "number" ? val : "nope";
+            case "id":
+            case "int":
+            case "float":
+            case "time":
+              return typeof val === "number" ? val : "nope";
 
-          case "boolean":
-            return typeof val === "boolean" ? val : "nope";
+            case "boolean":
+              return typeof val === "boolean" ? val : "nope";
 
-          case "array":
-          case "array_int":
-          case "array_id":
-          case "array_time":
-            return Array.isArray(val) ? val : "nope";
+            case "array":
+            case "array_int":
+            case "array_id":
+            case "array_time":
+              return Array.isArray(val) ? val : "nope";
 
-          case "object":
-            return typeof val === "object" ? val : "nope";
-          case "/":
-            return val;
+            case "object":
+              return typeof val === "object" ? val : "nope";
+            case "/":
+              return val;
+          }
         }
+        return "ok";
       }
-      return "ok";
-    })
+    )
   );
   return "/a" + lastPath + "/";
 };
