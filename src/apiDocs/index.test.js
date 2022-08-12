@@ -4,7 +4,7 @@ const { app } = require("../myTestEndpoint");
 describe("getApi", () => {
   test.only("Should return API JSON", () => {
     const api = getApi(app);
-    expect(api).toMatchObject({
+    expect(api).toStrictEqual({
       routes: [
         {
           method: "post",
@@ -28,7 +28,13 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Name too long" } },
+              keys: {
+                error: { value: "Name too long" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
             {
               status: 200,
@@ -74,7 +80,13 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "Testendpoint for multiple purposes",
@@ -88,7 +100,13 @@ describe("getApi", () => {
           method: "post",
           path: "/v/1/faultyendpoint/:id",
           assertions: {
-            body: { name: { type: "string", default: "no name" } },
+            body: {
+              name: {
+                type: "string",
+                default: "no name",
+                description: "A name",
+              },
+            },
             query: { filter: { type: "string", optional: true } },
             params: { id: { type: "id" } },
           },
@@ -97,7 +115,13 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Name too long" } },
+              keys: {
+                error: { value: "Name too long" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
             {
               status: 200,
@@ -113,7 +137,13 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "Faulty Testendpoint",
@@ -124,12 +154,18 @@ describe("getApi", () => {
         {
           method: "post",
           path: "/v/1/typelessendpoint",
-          assertions: {},
+          assertions: { body: {}, params: {}, query: {} },
           returns: [
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "Typeless endpoint",
@@ -140,6 +176,8 @@ describe("getApi", () => {
           method: "post",
           path: "/v/1/cantdecide",
           assertions: {
+            params: {},
+            query: {},
             body: {
               value: {
                 type: "oneOf",
@@ -159,7 +197,13 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "OneOf endpoint",
@@ -169,23 +213,41 @@ describe("getApi", () => {
         {
           method: "put",
           path: "/v/1/withjwt",
-          assertions: {},
+          assertions: { body: {}, params: {}, query: {} },
           returns: [
             { status: 200, value: "ok" },
             {
               status: 401,
               type: "object",
-              keys: { error: { value: "Unauthorized" } },
+              keys: {
+                error: { value: "Unauthorized" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
             {
               status: 401,
               type: "object",
-              keys: { error: { value: "Token invalid" } },
+              keys: {
+                error: { value: "Token invalid" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "Endpoint with JWT Authentication",
@@ -195,12 +257,24 @@ describe("getApi", () => {
         {
           method: "get",
           path: "/v/1/error",
-          assertions: { query: { error: { type: "boolean" } } },
+          assertions: {
+            body: {},
+            params: {},
+            query: {
+              error: { type: "boolean" },
+            },
+          },
           returns: [
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Text 1" } },
+              keys: {
+                error: { value: "Text 1" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
             {
               status: 400,
@@ -213,20 +287,39 @@ describe("getApi", () => {
             {
               status: 400,
               type: "object",
-              keys: { error: { value: "Fieldmissmatch" } },
+              keys: {
+                error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
             },
           ],
           title: "Error checkpoint endpoint",
           description: "This endpoint is full of errors.",
-          options: {},
+          options: { section: undefined },
         },
       ],
       sections: [
         {
           title: "Introduction",
+          description: `
+This API is for demo and testing purposes. You should never use it.
+
+But to brighten you up, here is a table:
+
+| **asrt** | **1** | **2** | **3** | **4** |
+|----------|-------|-------|-------|-------|
+| no       | yes   | yes   | no    | no    |
+| yes      | no    | no    | ye    | kanye |
+
+`,
+          subsections: [],
         },
         {
           title: "Some test endpoints",
+          description: undefined,
           subsections: [
             {
               title: "Undecided",
@@ -238,9 +331,10 @@ Here is some inline \`Code\`. It should actually be inline.
 // Some not inline code:
 console.log("Hollow orld");
 ~~~
-      `,
+`,
+              subsections: [],
             },
-            { title: "Auth" },
+            { title: "Auth", description: undefined, subsections: [] },
           ],
         },
       ],

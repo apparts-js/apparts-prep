@@ -230,7 +230,7 @@ But to brighten you up, here is a table:
 | no       | yes   | yes   | no    | no    |
 | yes      | no    | no    | ye    | kanye |
 
-  `,
+`,
 });
 section({
   app,
@@ -251,7 +251,7 @@ Here is some inline \`Code\`. It should actually be inline.
 // Some not inline code:
 console.log("Hollow orld");
 ~~~
-      `,
+`,
       routes: (app) => {
         app.post("/v/1/cantdecide", myOneOfEndpoint);
       },
