@@ -2,7 +2,7 @@ const { getApi } = require("./");
 const { app } = require("../myTestEndpoint");
 
 describe("getApi", () => {
-  test.only("Should return API JSON", () => {
+  test("Should return API JSON", () => {
     const api = getApi(app);
     expect(api).toStrictEqual({
       routes: [
