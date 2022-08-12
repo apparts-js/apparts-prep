@@ -2,7 +2,7 @@ const { getApi } = require("./");
 const { app } = require("../myTestEndpoint");
 
 describe("getApi", () => {
-  test("Should return API JSON", () => {
+  test.only("Should return API JSON", () => {
     const api = getApi(app);
     expect(api).toMatchObject({
       routes: [
@@ -25,21 +25,38 @@ describe("getApi", () => {
           },
           returns: [
             { status: 200, value: "ok" },
-            { status: 400, error: "Name too long" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Name too long" } },
+            },
             {
               status: 200,
               type: "object",
               keys: {
                 foo: { value: "really!", description: "Some text" },
-                boo: { type: "bool" },
-                kabaz: { type: "bool", optional: true },
+                boo: { type: "boolean" },
+                kabaz: { type: "boolean", optional: true },
                 arr: {
                   type: "array",
                   description: "This is an array",
                   items: {
                     type: "object",
                     description: "Some array item text",
-                    keys: { a: { type: "int" } },
+                    keys: {
+                      a: { type: "int" },
+                      c: {
+                        keys: {
+                          d: { type: "int" },
+                        },
+                        optional: true,
+                        type: "object",
+                      },
+                      e: {
+                        optional: true,
+                        type: "int",
+                      },
+                    },
                   },
                 },
                 objectWithUnknownKeys: {
@@ -54,7 +71,11 @@ describe("getApi", () => {
                 },
               },
             },
-            { status: 400, error: "Fieldmissmatch" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
           ],
           title: "Testendpoint for multiple purposes",
           description:
@@ -73,19 +94,27 @@ describe("getApi", () => {
           },
           returns: [
             { status: 200, value: "ok" },
-            { status: 400, error: "Name too long" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Name too long" } },
+            },
             {
               status: 200,
               type: "object",
               keys: {
-                boo: { type: "bool" },
+                boo: { type: "boolean" },
                 arr: {
                   type: "array",
                   items: { type: "object", keys: { a: { type: "int" } } },
                 },
               },
             },
-            { status: 400, error: "Fieldmissmatch" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
           ],
           title: "Faulty Testendpoint",
           description:
@@ -96,7 +125,13 @@ describe("getApi", () => {
           method: "post",
           path: "/v/1/typelessendpoint",
           assertions: {},
-          returns: [{ status: 400, error: "Fieldmissmatch" }],
+          returns: [
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
+          ],
           title: "Typeless endpoint",
           description: "This endpoint is typeless but not pointless.",
           options: { section: "1" },
@@ -119,45 +154,39 @@ describe("getApi", () => {
               },
             },
           },
-          returns: [{ status: 400, error: "Fieldmissmatch" }],
+          returns: [
+            { status: 200, value: "ok" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
+          ],
           title: "OneOf endpoint",
           description: "This endpoint can't decide what it wants.",
           options: { section: "1.0" },
-        },
-        {
-          method: "delete",
-          path: "/v/1/withpw",
-          assertions: {},
-          returns: [
-            { status: 401, error: "User not found" },
-            { status: 400, error: "Authorization wrong" },
-            { status: 400, error: "Fieldmissmatch" },
-          ],
-          title: "Endpoint with Pw Authentication",
-          description: "You shall not pass, unless you have a password.",
-          options: { auth: "Basic btoa(uname:password)", section: "1.1" },
-        },
-        {
-          method: "patch",
-          path: "/v/1/withtoken",
-          assertions: {},
-          returns: [
-            { status: 401, error: "User not found" },
-            { status: 400, error: "Authorization wrong" },
-            { status: 400, error: "Fieldmissmatch" },
-          ],
-          title: "Endpoint with Token Authentication",
-          description: "You shall not pass, unless you have a token.",
-          options: { auth: "Basic btoa(uname:token)", section: "1.1" },
         },
         {
           method: "put",
           path: "/v/1/withjwt",
           assertions: {},
           returns: [
-            { status: 401, error: "Unauthorized" },
-            { status: 401, error: "Token invalid" },
-            { status: 400, error: "Fieldmissmatch" },
+            { status: 200, value: "ok" },
+            {
+              status: 401,
+              type: "object",
+              keys: { error: { value: "Unauthorized" } },
+            },
+            {
+              status: 401,
+              type: "object",
+              keys: { error: { value: "Token invalid" } },
+            },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
           ],
           title: "Endpoint with JWT Authentication",
           description: "You shall not pass, unless you have a JWT.",
@@ -166,10 +195,26 @@ describe("getApi", () => {
         {
           method: "get",
           path: "/v/1/error",
-          assertions: { query: { error: { type: "bool" } } },
+          assertions: { query: { error: { type: "boolean" } } },
           returns: [
-            { status: 400, error: "Text 1" },
-            { status: 400, error: "Fieldmissmatch" },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Text 1" } },
+            },
+            {
+              status: 400,
+              type: "object",
+              keys: {
+                error: { value: "Text 1" },
+                unknownField: { type: "string" },
+              },
+            },
+            {
+              status: 400,
+              type: "object",
+              keys: { error: { value: "Fieldmissmatch" } },
+            },
           ],
           title: "Error checkpoint endpoint",
           description: "This endpoint is full of errors.",

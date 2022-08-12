@@ -12,8 +12,12 @@ const getRoutes = (app: Application) => {
           route: { path, stack = [] },
         } = route;
         const { method, handle } = stack[stack.length - 1];
-        const { returns, title, description, ...options } =
-          handle.options || {};
+        const {
+          returns = [],
+          title = "",
+          description,
+          ...options
+        } = handle.options || {};
         return {
           method,
           path,
@@ -27,7 +31,28 @@ const getRoutes = (app: Application) => {
       }
       return false;
     })
-    .filter((a) => !!a);
+    .filter((a) => !!a)
+    .map((route) => {
+      return {
+        ...route,
+        returns: route.returns.map((type) => {
+          if (
+            type.keys?.type?.value === "HttpError" ||
+            type.keys?.type?.value === "HttpCode"
+          ) {
+            return {
+              status: type.keys.code.value,
+              ...type.keys.message,
+            };
+          } else {
+            return {
+              status: 200,
+              ...type,
+            };
+          }
+        }),
+      };
+    });
 };
 
 type ApiSection = {
@@ -86,6 +111,17 @@ export const section = ({
 
 export const getApi = (app: Application) => {
   const exdendedApp = app as ExtendedExpressApp;
-  const api = getRoutes(app);
+
+  const api = getRoutes(app).map(
+    ({ method, path, assertions, returns, title, description, options }) => ({
+      method,
+      path,
+      assertions,
+      returns,
+      title,
+      description,
+      options,
+    })
+  );
   return { routes: api, sections: exdendedApp.appartsApiSections || [] };
 };
