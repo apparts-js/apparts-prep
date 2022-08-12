@@ -1,54 +1,64 @@
+import { httpErrorSchema } from "../error";
 import { v1 as uuidv1 } from "uuid";
 import {
   types,
   checkType as recursiveCheck,
   explainCheck,
-  //  Schema,
-  Type,
+  Obj,
+  Required,
+  Schema,
+  obj,
 } from "@apparts/types";
 import assertionType from "../apiTypes/preparatorAssertionType";
 import returnType from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
+import { OptionsType, NextFnType, AssertionsType } from "./types";
 
-type PrepOptions = {
-  strap?: boolean;
-  returns: ({
-    code: number;
-  } & ({
-    error: string;
-    description?: string;
-  } & Type))[];
-
-  /*    | {
-        schema: Schema<any, any>;
-      }*/
-};
-
-export const prepare = (
-  assertions,
-  next,
-  options: PrepOptions = { returns: [] }
+export const prepare = <
+  BodyType extends Obj<any, Required>,
+  ParamsType extends Obj<any, Required>,
+  QueryType extends Obj<any, Required>,
+  ReturnTypes extends Schema<any, Required>[]
+>(
+  assertions: AssertionsType<BodyType, ParamsType, QueryType>,
+  next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>,
+  options: OptionsType<ReturnTypes> = { title: "", returns: [] as ReturnTypes }
 ) => {
-  const fields = assertions;
+  const {
+    body: bodySchema = obj({}),
+    params: paramsSchema = obj({}),
+    query: querySchema = obj({}),
+    ...restAssertions
+  } = assertions;
+  const fields = {
+    body: bodySchema.getModelType(),
+    params: paramsSchema.getModelType(),
+    query: querySchema.getModelType(),
+  };
 
   const assError = explainCheck(fields, assertionType);
-  if (assError) {
+  if (assError || Object.keys(restAssertions).length > 0) {
     throw new Error(
       "PREPARATOR: Nope, your assertions are not well defined!\nYour assertions: " +
-        JSON.stringify(assertions, undefined, 2) +
+        JSON.stringify(fields, undefined, 2) +
         "\nProblem: " +
-        JSON.stringify(assError, undefined, 2)
+        JSON.stringify(assError, undefined, 2) +
+        "\nRoute: " +
+        options?.title
     );
   }
 
-  const retError = explainCheck(options.returns || [], returnType);
+  const returnTypes = (options.returns || []).map((r) => r.getType());
+  const retError = explainCheck(returnTypes, returnType);
   if (retError) {
     throw new Error(
       "PREPARATOR: Nope, your return types are not well defined!\nYour returns: " +
-        JSON.stringify(options.returns, undefined, 2) +
+        JSON.stringify(returnTypes, undefined, 2) +
         "\nProblem: " +
-        JSON.stringify(retError, undefined, 2)
+        JSON.stringify(retError, undefined, 2) +
+        "\nRoute: " +
+        options?.title
     );
   }
 
@@ -113,13 +123,11 @@ export const prepare = (
       catchError(res, req, e);
     }
   };
-  f.assertions = assertions;
+
+  f.assertions = fields;
   f.options = {
     ...options,
-    returns: [
-      ...(options.returns || []),
-      { status: 400, error: "Fieldmissmatch" },
-    ],
+    returns: [...returnTypes, httpErrorSchema(400, "Fieldmissmatch").getType()],
   };
   return f;
 };
@@ -127,12 +135,7 @@ export const prepare = (
 const catchError = (res, req, e) => {
   if (typeof e === "object" && e !== null && e.type === "HttpError") {
     res.status(e.code);
-    res.send(
-      JSON.stringify({
-        error: e.message,
-        description: e.description,
-      })
-    );
+    res.send(JSON.stringify(e.message));
     return;
   }
   const errorObj = constructErrorObj(req, e);

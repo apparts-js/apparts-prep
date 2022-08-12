@@ -9,17 +9,20 @@ const returnType = {
       {
         type: "object",
         keys: {
-          status: { type: "int" },
-          error: { type: "string" },
+          code: { type: "int" },
+          message: rtype,
+          type: { value: "HttpError" },
         },
       },
-      ...rtype.alternatives.map((t) => ({
-        ...t,
+      {
+        type: "object",
         keys: {
-          ...t.keys,
-          status: { type: "int" },
+          code: { type: "int" },
+          message: rtype,
+          type: { value: "HttpCode" },
         },
-      })),
+      },
+      ...rtype.alternatives,
     ],
   },
 };

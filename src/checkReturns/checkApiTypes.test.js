@@ -1,9 +1,23 @@
-const { useChecks } = require("./checkApiTypes.js");
+import { obj } from "@apparts/types";
+const { useChecks, isNotFieldmissmatch } = require("./checkApiTypes");
 const myEndpoint = require("../myTestEndpoint");
 const request = require("supertest");
+import { httpErrorSchema } from "../error";
 
 const app = myEndpoint.app;
 const { checkType, allChecked } = useChecks(myEndpoint);
+
+describe("isNotFieldMissmatch", () => {
+  it("should detect field missmatch", async () => {
+    expect(
+      isNotFieldmissmatch(httpErrorSchema(400, "Fieldmissmatch").getType())
+    ).toBe(false);
+  });
+  it("should not detect non-field missmatch", async () => {
+    expect(isNotFieldmissmatch(obj({}))).toBe(true);
+    expect(isNotFieldmissmatch(httpErrorSchema(400, "Other error"))).toBe(true);
+  });
+});
 
 describe("myTypelessEndpoint", () => {
   test("Detect missing type-definition", async () => {
@@ -28,19 +42,25 @@ describe("myFaultyEndpoint", () => {
 MISSMATCH: Code: 200 Body: "whut?"
 EXPECTED TYPES: [
   {
-    "status": 200,
     "value": "ok"
   },
   {
-    "status": 400,
-    "error": "Name too long"
+    "type": "object",
+    "keys": {
+      "error": {
+        "value": "Name too long"
+      },
+      "description": {
+        "type": "string",
+        "optional": true
+      }
+    }
   },
   {
-    "status": 200,
     "type": "object",
     "keys": {
       "boo": {
-        "type": "bool"
+        "type": "boolean"
       },
       "arr": {
         "type": "array",
@@ -104,20 +124,22 @@ EXPECTED TYPES: [
 });
 
 describe("myEndpoint, incomplete test", () => {
-  test("Test with default name", async () => {
-    const response = await request(app).post("/v/1/endpoint/3");
+  test("Test with non-kabaz filter", async () => {
+    const response = await request(app).post("/v/1/endpoint/3?filter=4");
     expect(checkType(response, "myEndpoint")).toBeTruthy();
     expect(response.statusCode).toBe(200);
-    expect(response.body).toBe("ok");
-  });
-  test("Test with too long name", async () => {
-    const response = await request(app)
-      .post("/v/1/endpoint/3")
-      .send({
-        name: "x".repeat(200),
-      });
-    expect(checkType(response, "myEndpoint")).toBeTruthy();
-    expect(response.statusCode).toBe(400);
+    expect(response.body).toMatchObject({
+      arr: [{ a: 1 }, { a: 2 }],
+      boo: true,
+      objectWithUnknownKeys: {
+        baz: 77,
+        boo: 99,
+      },
+      objectWithUnknownKeysAndUnknownTypes: {
+        baz: 77,
+        boo: false,
+      },
+    });
   });
   test("Test with filter asstring", async () => {
     const response = await request(app).post("/v/1/endpoint/3?filter=asstring");
@@ -145,58 +167,17 @@ describe("Notice, that not everything was tested", () => {
       message: `Not all possible return combinations for ### myEndpoint ### have been tested!
 MISSING: [
   {
-    "status": 200,
+    "value": "ok"
+  },
+  {
     "type": "object",
     "keys": {
-      "foo": {
-        "value": "really!",
-        "description": "Some text"
+      "error": {
+        "value": "Name too long"
       },
-      "boo": {
-        "type": "bool"
-      },
-      "kabaz": {
-        "type": "bool",
+      "description": {
+        "type": "string",
         "optional": true
-      },
-      "arr": {
-        "type": "array",
-        "description": "This is an array",
-        "items": {
-          "type": "object",
-          "description": "Some array item text",
-          "keys": {
-            "a": {
-              "type": "int"
-            },
-            "c": {
-              "type": "object",
-              "optional": true,
-              "keys": {
-                "d": {
-                  "type": "int"
-                }
-              }
-            },
-            "e": {
-              "type": "int",
-              "optional": true
-            }
-          }
-        }
-      },
-      "objectWithUnknownKeys": {
-        "type": "object",
-        "values": {
-          "type": "int"
-        },
-        "description": "Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non."
-      },
-      "objectWithUnknownKeysAndUnknownTypes": {
-        "type": "object",
-        "values": {
-          "type": "/"
-        }
       }
     }
   }
@@ -205,23 +186,22 @@ MISSING: [
   });
 });
 
-describe("myEndpoint, the missing test", () => {
-  test("Test with non-kabaz filter", async () => {
-    const response = await request(app).post("/v/1/endpoint/3?filter=4");
+describe("myEndpoint, the missing tests", () => {
+  test("Test with too long name", async () => {
+    const response = await request(app)
+      .post("/v/1/endpoint/3")
+      .send({
+        name: "x".repeat(200),
+      });
+    expect(checkType(response, "myEndpoint")).toBeTruthy();
+    console.log("test wiith too long n");
+    expect(response.statusCode).toBe(400);
+  });
+  test("Test with default name", async () => {
+    const response = await request(app).post("/v/1/endpoint/3");
     expect(checkType(response, "myEndpoint")).toBeTruthy();
     expect(response.statusCode).toBe(200);
-    expect(response.body).toMatchObject({
-      arr: [{ a: 1 }, { a: 2 }],
-      boo: true,
-      objectWithUnknownKeys: {
-        baz: 77,
-        boo: 99,
-      },
-      objectWithUnknownKeysAndUnknownTypes: {
-        baz: 77,
-        boo: false,
-      },
-    });
+    expect(response.body).toBe("ok");
   });
 });
 
@@ -257,21 +237,12 @@ describe("myErrorCheckpoint, endpoint with error and description", () => {
     });
 
     const response2 = await request(app).get("/v/1/error?error=false");
-    expect(() => checkType(response2, "myErrorCheckpoint")).toThrow({
-      message: `Returntype for ### myErrorCheckpoint ### does not match any given pattern!
-MISSMATCH: Code: 400 Body: {"error":"Text 1","unknownField":"Text 2"}
-EXPECTED TYPES: [
-  {
-    "status": 400,
-    "error": "Text 1"
-  }
-]`,
-    });
     expect(response2.statusCode).toBe(400);
     expect(response2.body).toMatchObject({
       error: "Text 1",
-      unknownField: "Text 2",
+      unknownField: "Some unknown text",
     });
+    expect(() => checkType(response2, "myErrorCheckpoint")).toBeTruthy();
   });
 });
 

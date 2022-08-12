@@ -145,7 +145,7 @@ const base64 = async (tipe, path, right, wrong, isParams, isQuery) => {
   await right(path, "dGVzdA==", tipe);
 };
 
-const bool = async (tipe, path, right, wrong, isParams) => {
+const boolean = async (tipe, path, right, wrong, isParams) => {
   await wrong(path, 4, tipe);
   await wrong(path, 4.4, tipe);
   await wrong(path, [], tipe);
@@ -374,7 +374,7 @@ module.exports = {
   float,
   hex,
   base64,
-  bool,
+  boolean,
   string,
   email,
   array,

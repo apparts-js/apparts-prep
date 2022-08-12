@@ -1,27 +1,37 @@
-const {
+import {
+  httpCodeSchema,
   HttpCode,
+  httpErrorSchema,
   HttpError,
   prepare,
-  prepauthToken,
-  prepauthPW,
   prepauthTokenJWT,
   section,
-} = require("./index");
-
-const express = require("express");
+} from "./index";
+import {
+  obj,
+  objValues,
+  oneOf,
+  any,
+  array,
+  string,
+  int,
+  value,
+  boolean,
+} from "@apparts/types";
+import express from "express";
 
 const myEndpoint = prepare(
   {
-    body: {
-      name: { type: "string", default: "no name", description: "A name" },
-    },
-    query: {
-      filter: { type: "string", optional: true },
-      number: { type: "int", default: 0 },
-    },
-    params: {
-      id: { type: "id" },
-    },
+    body: obj({
+      name: string().default("no name").description("A name"),
+    }),
+    query: obj({
+      filter: string().optional(),
+      number: int().default(0),
+    }),
+    params: obj({
+      id: int().semantic("id"),
+    }),
   },
   async ({ body: { name }, query: { filter } /*, params: { id }*/ }) => {
     if (name.length > 100) {
@@ -32,19 +42,20 @@ const myEndpoint = prepare(
       // Return values are JSONified automatically!
       const resp = {
         arr: [{ a: 1 }, { a: 2, c: null, e: null }],
-        foo: "really!",
+        foo: "really!" as const,
         boo: true,
         objectWithUnknownKeys: {
-          baz: filter === "asstring" ? "77" : 77,
+          baz: (filter === "asstring" ? "77" : 77) as number,
           boo: 99,
         },
         objectWithUnknownKeysAndUnknownTypes: {
           baz: 77,
           boo: false,
         },
+        kabaz: false,
       };
-      if (filter === "kabazplz") {
-        resp.kabaz = false;
+      if (filter !== "kabazplz") {
+        delete resp.kabaz;
       }
       return resp;
     }
@@ -56,65 +67,43 @@ const myEndpoint = prepare(
     description: `Behaves radically different, based on what
  the filter is.`,
     returns: [
-      { status: 200, value: "ok" },
-      { status: 400, error: "Name too long" },
-      {
-        status: 200,
-        type: "object",
-        keys: {
-          foo: { value: "really!", description: "Some text" },
-          boo: { type: "bool" },
-          kabaz: { type: "bool", optional: true },
-          arr: {
-            type: "array",
-            description: "This is an array",
-            items: {
-              type: "object",
-              description: "Some array item text",
-              keys: {
-                a: { type: "int" },
-                c: {
-                  type: "object",
-                  optional: true,
-                  keys: {
-                    d: { type: "int" },
-                  },
-                },
-                e: {
-                  type: "int",
-                  optional: true,
-                },
-              },
-            },
-          },
-          objectWithUnknownKeys: {
-            type: "object",
-            values: { type: "int" },
-            description:
-              "Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non.",
-          },
-          objectWithUnknownKeysAndUnknownTypes: {
-            type: "object",
-            values: { type: "/" },
-          },
-        },
-      },
+      value("ok"),
+      httpErrorSchema(400, "Name too long"),
+      obj({
+        foo: value("really!").description("Some text"),
+        boo: boolean(),
+        kabaz: boolean().optional(),
+        arr: array(
+          obj({
+            a: int(),
+            c: obj({
+              d: int(),
+            }).optional(),
+            e: int().optional(),
+          }).description("Some array item text")
+        ).description("This is an array"),
+        objectWithUnknownKeys: objValues(int()).description(
+          "Quod illo quos excepturi alias qui. Illo non laudantium commodi. Est quos consequatur debitis in. Iusto fugiat sunt sit. Dolorem quod eius sit non."
+        ),
+        objectWithUnknownKeysAndUnknownTypes: objValues(any()),
+      }),
     ],
   }
 );
 
 const myFaultyEndpoint = prepare(
   {
-    body: {
-      name: { type: "string", default: "no name", description: "A name" },
-    },
-    query: {
-      filter: { type: "string", optional: true },
-    },
-    params: {
-      id: { type: "id" },
-    },
+    body: obj({
+      name: string().default("no name").description("A name"),
+    }),
+    query: obj({
+      filter: string().optional(),
+    }),
+    params: obj({
+      id: int().semantic("id"),
+    }),
   },
+  // @ts-expect-error test type
   async ({ body: { name }, query: { filter } /*, params: { id }*/ }) => {
     if (name.length > 100) {
       return new HttpError(400, "Name is too long");
@@ -144,115 +133,90 @@ const myFaultyEndpoint = prepare(
     description: `Ment to be found to be faulty. It's documentation
 does not match it's behavior.`,
     returns: [
-      { status: 200, value: "ok" },
-      { status: 400, error: "Name too long" },
-      {
-        status: 200,
-        type: "object",
-        keys: {
-          boo: { type: "bool" },
-          arr: {
-            type: "array",
-            items: {
-              type: "object",
-              keys: {
-                a: { type: "int" },
-              },
-            },
-          },
-        },
-      },
+      value("ok"),
+      httpErrorSchema(400, "Name too long"),
+      obj({
+        boo: boolean(),
+        arr: array(
+          obj({
+            a: int(),
+          })
+        ),
+      }),
     ],
   }
 );
 
 const myOneOfEndpoint = prepare(
   {
-    body: {
-      value: {
-        type: "oneOf",
-        alternatives: [
-          { type: "int", description: "One option" },
-          {
-            type: "object",
-            values: { type: "/" },
-            description: "Another option",
-          },
-        ],
-      },
-    },
+    body: obj({
+      value: oneOf([
+        int().description("One option"),
+        objValues(any()).description("Another option"),
+      ]),
+    }),
   },
   async () => {
-    return "ok";
+    return "ok" as const;
   },
   {
     title: "OneOf endpoint",
     description: `This endpoint can't decide what it wants.`,
+    returns: [value("ok")],
   }
 );
 
 const myTypelessEndpoint = prepare(
   {},
   async () => {
-    return "ok";
+    return "ok" as const;
   },
   {
     title: "Typeless endpoint",
     description: `This endpoint is typeless but not pointless.`,
+    returns: [],
   }
 );
 
-const myPwAuthenticatedEndpoint = prepauthPW({})(
-  {},
-  async () => {
-    return "ok";
-  },
-  {
-    title: "Endpoint with Pw Authentication",
-    description: "You shall not pass, unless you have a password.",
-  }
-);
-const myTokenAuthenticatedEndpoint = prepauthToken({})(
-  {},
-  async () => {
-    return "ok";
-  },
-  {
-    title: "Endpoint with Token Authentication",
-    description: "You shall not pass, unless you have a token.",
-  }
-);
 const myJWTAuthenticatedEndpoint = prepauthTokenJWT("")(
   {},
   async () => {
-    return "ok";
+    return "ok" as const;
   },
   {
     title: "Endpoint with JWT Authentication",
     description: "You shall not pass, unless you have a JWT.",
+    returns: [value("ok")],
   }
 );
 
 const myErrorCheckpoint = prepare(
-  { query: { error: { type: "bool" } } },
+  { query: obj({ error: boolean() }) },
   async ({ query: { error } }) => {
     if (error) {
-      return new HttpCode(400, { error: "Text 1", description: "Text 2" });
+      return new HttpError(400, "Text 1", "Text 2");
     } else {
-      return new HttpCode(400, { error: "Text 1", unknownField: "Text 2" });
+      return new HttpCode(400, {
+        error: "Text 1" as const,
+        unknownField: "Some unknown text",
+      });
     }
   },
   {
     title: "Error checkpoint endpoint",
     description: `This endpoint is full of errors.`,
-    returns: [{ status: 400, error: "Text 1" }],
+    returns: [
+      httpErrorSchema(400, "Text 1"),
+      httpCodeSchema(
+        400,
+        obj({ error: value("Text 1"), unknownField: string() })
+      ),
+    ],
   }
 );
 
 const app = express();
-const bodyParser = require("body-parser");
-app.use(bodyParser.json());
-
+app.use(express.json());
 section({
   app,
   title: "Introduction",
@@ -296,8 +260,6 @@ console.log("Hollow orld");
       app,
       title: "Auth",
       routes: (app) => {
-        app.delete("/v/1/withpw", myPwAuthenticatedEndpoint);
-        app.patch("/v/1/withtoken", myTokenAuthenticatedEndpoint);
         app.put("/v/1/withjwt", myJWTAuthenticatedEndpoint);
       },
     });

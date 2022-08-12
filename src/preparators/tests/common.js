@@ -47,8 +47,9 @@ const expectError = async (path, body, code, resBody) => {
     .post(path)
     .send(body)
     .expect("Content-Type", "application/json; charset=utf-8");
-  expect(res.body).toMatchObject(resBody);
   expect(res.status).toBe(code);
+  expect(res.body).toMatchObject(resBody);
+
   return res;
 };
 
@@ -76,7 +77,7 @@ const defPrep = (path, assumptions, tipe) => {
           case "time":
             return typeof val === "number" ? val : "nope";
 
-          case "bool":
+          case "boolean":
             return typeof val === "boolean" ? val : "nope";
 
           case "array":

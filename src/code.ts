@@ -1,25 +1,42 @@
-export class HttpCode {
-  public code: number;
-  public readonly type = "HttpCode";
-  public message: string;
-  public description: string;
+import { Schema, Obj, Value, Required, InferType } from "@apparts/types";
 
-  constructor(code: number, message: string) {
+type MessageType = InferType<Schema<any, Required>>;
+
+export class HttpCode<Code extends number, Message extends MessageType> {
+  public code: Code;
+  public readonly type = "HttpCode" as const;
+  public message: Message;
+
+  constructor(code: Code, message: Message) {
     this.code = code;
-    if (message) {
-      this.message = message;
-    } else {
-      this.message = this.getDefaultMessage(code);
-    }
-  }
-
-  getDefaultMessage(code: number) {
-    switch (code) {
-      default:
-        return "";
-    }
+    this.message = message;
   }
 }
+
+export const httpCodeSchema = <
+  Code extends number,
+  Message extends Schema<any, Required>
+>(
+  code: Code,
+  message: Message
+) => {
+  const type = "HttpCode" as const;
+  type A = Readonly<typeof code>;
+  type B = Readonly<typeof type>;
+
+  return new Obj<
+    {
+      code: Value<A, Required>;
+      message: Message;
+      type: Value<B, Required>;
+    },
+    Required
+  >({
+    code: new Value(code),
+    message,
+    type: new Value(type),
+  });
+};
 
 export class DontRespond {
   public readonly type = "DontRespond";

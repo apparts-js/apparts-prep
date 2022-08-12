@@ -2,17 +2,22 @@
   "name": "@apparts/prep",
   "version": "1.0.0",
   "description": "Typechecking for express requests",
-  "main": "index.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "test": "jest --watch",
     "test:one": "jest",
     "test:coverage": "jest --coverage",
-    "genApiDocs": "node apiDocs/generateHtmlApi.js && node apiDocs/generateMdApi.js",
-    "prepublishOnly": "npm run ci && npm ci",
+    "genApiDocs": "ts-node src/apiDocs/generateHtmlApi.js && ts-node src/apiDocs/generateMdApi.js && ts-node src/apiDocs/generateReactApi.js",
+    "prepublishOnly": "npm run clean && npm ci  && npm run ci && npm run build",
     "ci": "npm ci && npm run ci:prettier && npm run ci:eslint && npm run ci:test",
     "ci:prettier": "CI=true prettier --check .",
     "ci:test": "CI=true npm run test:one",
-    "ci:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -c .eslintrc.ci.js"
+    "ci:eslint": "eslint . --ext .js,.jsx,.ts,.tsx -c .eslintrc.ci.js",
+    "build": "npm run clean && tsc -p tsconfig.release.json",
+    "build:watch": "tsc -w -p tsconfig.release.json",
+    "build:types": "tsc --emitDeclarationOnly -p tsconfig.release.json --outDir dts",
+    "clean": "rimraf coverage build tmp"
   },
   "repository": {
     "type": "git",
@@ -26,20 +31,22 @@
   "author": "Philipp Uhl",
   "license": "MIT",
   "dependencies": {
+    "jsonwebtoken": "^8.5.1",
     "uuid": "^3.3.2"
   },
   "peerDependencies": {
     "@apparts/config": "^1.0.5",
-    "@apparts/model": "^4.0.2",
+    "@apparts/model": "^4.6.3",
     "@apparts/types": "^7.0.3"
   },
   "devDependencies": {
     "@apparts/config": "^1.1.0",
-    "@apparts/model": "^4.0.2",
+    "@apparts/model": "^4.6.3",
     "@apparts/types": "^7.0.4",
     "@tsconfig/node14": "^1.0.1",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.4.0",
+    "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.10.1",
     "@typescript-eslint/parser": "^5.10.1",

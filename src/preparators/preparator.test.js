@@ -1,3 +1,19 @@
+import {
+  obj,
+  oneOf,
+  any,
+  array,
+  string,
+  email,
+  int,
+  value,
+  boolean,
+  hex,
+  base64,
+  uuidv4,
+  float,
+} from "@apparts/types";
+
 const { defPrep, expectSuccess, app, expectError } = require("./tests/common");
 const { HttpError } = require("../error");
 const { HttpCode, DontRespond } = require("../code");
@@ -25,9 +41,9 @@ describe("Options.strap", () => {
       getNextUrl() + ":tooMuch/:expected",
       prepare(
         {
-          body: { expected: { type: "int" } },
-          query: { expected: { type: "int" } },
-          params: { expected: { type: "int" } },
+          body: obj({ expected: int() }),
+          query: obj({ expected: int() }),
+          params: obj({ expected: int() }),
         },
         async ({ body, query, params }) => {
           if (
@@ -57,7 +73,7 @@ describe("HttpErrors", () => {
     app.post(
       getNextUrl(),
       prepare({}, async () => {
-        return new HttpError(400);
+        return new HttpError(400, "Bad Request");
       })
     );
     await expectError(getCurrentUrl(), {}, 400, { error: "Bad Request" });
@@ -66,7 +82,7 @@ describe("HttpErrors", () => {
     app.post(
       getNextUrl(),
       prepare({}, async () => {
-        throw new HttpError(400);
+        throw new HttpError(400, "Bad Request");
       })
     );
     await expectError(getCurrentUrl(), {}, 400, { error: "Bad Request" });
@@ -183,7 +199,7 @@ describe("HttpCodes", () => {
     app.post(
       getNextUrl(),
       prepare({}, async () => {
-        return new HttpCode(300);
+        return new HttpCode(300, "redirect");
       })
     );
     const res = await request(app)
@@ -205,43 +221,12 @@ describe("Function not async", () => {
   });
 });
 
-describe("Wrong type", () => {
-  test("Should throw an error on unknown type", async () => {
-    expect(() =>
-      app.post(
-        getNextUrl(),
-        prepare(
-          {
-            body: {
-              myCorrectField: { type: "int" },
-              myField: { type: "käsebrot" },
-            },
-          },
-          () => {
-            return "ok";
-          }
-        )
-      )
-    ).toThrowError("PREPARATOR: Nope, your assertions are not well defined!");
-  });
-  test("Should throw an error on missing type", async () => {
-    expect(() =>
-      app.post(
-        getNextUrl(),
-        prepare({ body: { myField: {} } }, () => {
-          return "ok";
-        })
-      )
-    ).toThrowError("PREPARATOR: Nope, your assertions are not well defined!");
-  });
-});
-
 describe("Unknown field", () => {
   test("Should throw an error", async () => {
     expect(() =>
       app.post(
         getNextUrl(),
-        prepare({ sixpack: { field: { type: "int" } } }, () => {
+        prepare({ sixpack: obj({ field: int() }) }, () => {
           return "ok";
         })
       )
