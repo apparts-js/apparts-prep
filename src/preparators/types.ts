@@ -10,11 +10,16 @@ export type OneOfReturnTypes<T extends Schema<any, Required>[]> = {
     : never;
 }[number];
 
+export type BodyObj = Obj<any, Required>;
+export type ParamsObj = Obj<any, Required>;
+export type QueryObj = Obj<any, Required>;
+export type ReturnsArray = Schema<any, Required>[];
+
 export type OptionsType<
-  BodyType extends Obj<any, Required>,
-  ParamsType extends Obj<any, Required>,
-  QueryType extends Obj<any, Required>,
-  ReturnTypes extends Schema<any, Required>[]
+  BodyType extends BodyObj,
+  ParamsType extends ParamsObj,
+  QueryType extends QueryObj,
+  ReturnTypes extends ReturnsArray
 > = {
   title: string;
   description?: string;
@@ -25,9 +30,9 @@ export type OptionsType<
 };
 
 export type RequestType<
-  BodyType extends Obj<any, Required>,
-  ParamsType extends Obj<any, Required>,
-  QueryType extends Obj<any, Required>
+  BodyType extends BodyObj,
+  ParamsType extends ParamsObj,
+  QueryType extends QueryObj
 > = {
   body: InferType<BodyType>;
   params: InferType<ParamsType>;
@@ -37,19 +42,31 @@ export type RequestType<
 export type ResponseType = ExpressResponse;
 
 export type NextFnType<
-  BodyType extends Obj<any, Required>,
-  ParamsType extends Obj<any, Required>,
-  QueryType extends Obj<any, Required>,
-  ReturnTypes extends Schema<any, Required>[]
+  BodyType extends BodyObj,
+  ParamsType extends ParamsObj,
+  QueryType extends QueryObj,
+  ReturnTypes extends ReturnsArray
 > = (
   req: RequestType<BodyType, ParamsType, QueryType>,
   res: ResponseType
 ) => Promise<OneOfReturnTypes<ReturnTypes>>;
 
+export type NextFnWithAuthType<
+  BodyType extends BodyObj,
+  ParamsType extends ParamsObj,
+  QueryType extends QueryObj,
+  ReturnTypes extends ReturnsArray,
+  AuthElemt
+> = (
+  req: RequestType<BodyType, ParamsType, QueryType>,
+  me: AuthElemt,
+  res: ResponseType
+) => Promise<OneOfReturnTypes<ReturnTypes>>;
+
 export type AssertionsType<
-  BodyType extends Obj<any, Required>,
-  ParamsType extends Obj<any, Required>,
-  QueryType extends Obj<any, Required>
+  BodyType extends BodyObj,
+  ParamsType extends ParamsObj,
+  QueryType extends QueryObj
 > = {
   body?: BodyType;
   params?: ParamsType;

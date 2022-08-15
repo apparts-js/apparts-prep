@@ -1,11 +1,11 @@
-import { Schema, Required, Obj } from "@apparts/types";
-
 import {
   OptionsType,
-  RequestType,
-  ResponseType,
-  OneOfReturnTypes,
+  NextFnWithAuthType,
   NextFnType,
+  BodyObj,
+  ParamsObj,
+  QueryObj,
+  ReturnsArray,
 } from "./types";
 
 import { HttpError, httpErrorSchema } from "../error";
@@ -17,17 +17,19 @@ import { verify as verifyJWT } from "jsonwebtoken";
 export const prepauthTokenJWT =
   <JWTType extends { action: string }>(webtokenkey: string) =>
   <
-    BodyType extends Obj<any, Required>,
-    ParamsType extends Obj<any, Required>,
-    QueryType extends Obj<any, Required>,
-    ReturnTypes extends Schema<any, Required>[]
+    BodyType extends BodyObj,
+    ParamsType extends ParamsObj,
+    QueryType extends QueryObj,
+    ReturnTypes extends ReturnsArray
   >(
     options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes>,
-    next: (
-      req: RequestType<BodyType, ParamsType, QueryType>,
-      me: JWTType,
-      res: ResponseType
-    ) => Promise<OneOfReturnTypes<ReturnTypes>>
+    next: NextFnWithAuthType<
+      BodyType,
+      ParamsType,
+      QueryType,
+      ReturnTypes,
+      JWTType
+    >
   ) => {
     return prepare(
       {
