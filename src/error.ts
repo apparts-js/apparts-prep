@@ -10,7 +10,7 @@ export class HttpError<Code extends number, Message extends string> {
   }
 
   static notFound(element: string) {
-    throw new HttpError(404, `${element} not found`);
+    return new HttpError(404, `${element} not found`);
   }
 }
 
