@@ -183,10 +183,6 @@ Within the =route= function you can use the =HttpError= class as follows:
     //   description: "Some dynamic info: blub"
     // }
 
-    // shorthand for 404
-    return HttpError.notFound("My element"); 
-    // --> http-statuscode 404, body: { error: "My element not found" }
-
     // can be thrown
     throw new HttpError(412, "Want to throw");  
     // --> http-statuscode 412, body: { error: "Want to throw" }

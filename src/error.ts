@@ -8,10 +8,6 @@ export class HttpError<Code extends number, Message extends string> {
     this.code = code;
     this.message = { error: message, description };
   }
-
-  static notFound(element: string) {
-    return new HttpError(404, `${element} not found`);
-  }
 }
 
 export const httpErrorSchema = <Code extends number, Message extends string>(
