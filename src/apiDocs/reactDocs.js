@@ -1,3 +1,9 @@
+/**
+   AFTER CHANGING THIS:
+
+   Make sure to compile using $ node ./scripts/compileReactCode.js
+ */
+
 const ReactMarkdown = window.ReactMarkdown;
 const remarkGfm = window.remarkGfm;
 const SyntaxHighlighter = window.SyntaxHighlighter;

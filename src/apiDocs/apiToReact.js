@@ -1,8 +1,6 @@
 const STYLE = require("./style");
-const fs = require("fs");
 
-const pathToJsFile = require.resolve("../../src/apiDocs/reactDocs.js");
-const js = fs.readFileSync(pathToJsFile);
+const js = require("./reactDocs_compiled");
 
 const apiToReact = (api, commitHash, apiName = "API", style = STYLE) => {
   return `
