@@ -1,6 +1,6 @@
 {
   "name": "@apparts/prep",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Typechecking for express requests",
   "main": "build/index.js",
   "types": "build/index.d.ts",
