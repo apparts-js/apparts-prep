@@ -160,7 +160,7 @@ const myOneOfEndpoint = prepare(
         ]),
       }),
     },
-    returns: [value("ok")],
+    returns: [value("ok").title("ok")],
   },
   async () => {
     return "ok" as const;
