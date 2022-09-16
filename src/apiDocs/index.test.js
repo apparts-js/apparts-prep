@@ -193,7 +193,7 @@ describe("getApi", () => {
             },
           },
           returns: [
-            { status: 200, value: "ok" },
+            { status: 200, value: "ok", title: "ok" },
             {
               status: 400,
               type: "object",
