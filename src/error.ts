@@ -1,4 +1,4 @@
-import { Obj, Value, Required, Optional, Strring } from "@apparts/types";
+import { Obj, Value, Required, BaseType, _Optional } from "@apparts/types";
 
 export class HttpError<Code extends number, Message extends string> {
   public code: Code;
@@ -19,23 +19,23 @@ export const httpErrorSchema = <Code extends number, Message extends string>(
   type B = Readonly<typeof message>;
   type C = Readonly<typeof errorType>;
   return new Obj<
+    Required,
     {
-      code: Value<A, Required>;
+      code: Value<Required, A>;
       message: Obj<
         {
-          error: Value<B, Required>;
-          description: Strring<Optional>;
+          error: Value<Required, B>;
+          description: BaseType<_Optional, string>;
         },
         Required
       >;
-      type: Value<C, Required>;
-    },
-    Required
+      type: Value<Required, C>;
+    }
   >({
     code: new Value(code),
     message: new Obj({
       error: new Value(message),
-      description: new Strring({
+      description: new BaseType({
         type: "string",
         optional: true,
       }),

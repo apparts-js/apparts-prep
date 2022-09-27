@@ -4,16 +4,16 @@ import {
   Request as ExpressRequest,
 } from "express";
 
-export type OneOfReturnTypes<T extends Schema<any, Required>[]> = {
-  [key in keyof T]: T[key] extends Schema<any, Required>
+export type OneOfReturnTypes<T extends Schema<Required, any>[]> = {
+  [key in keyof T]: T[key] extends Schema<Required, any>
     ? T[key]["__type"]
     : never;
 }[number];
 
-export type BodyObj = Obj<any, Required>;
-export type ParamsObj = Obj<any, Required>;
-export type QueryObj = Obj<any, Required>;
-export type ReturnsArray = Schema<any, Required>[];
+export type BodyObj = Obj<Required, any>;
+export type ParamsObj = Obj<Required, any>;
+export type QueryObj = Obj<Required, any>;
+export type ReturnsArray = Schema<Required, any>[];
 
 export type OptionsType<
   BodyType extends BodyObj,

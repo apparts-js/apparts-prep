@@ -16,10 +16,10 @@ const config = getConfig("types-config");
 import { NextFnType, OptionsType } from "./types";
 
 export const prepare = <
-  BodyType extends Obj<any, Required>,
-  ParamsType extends Obj<any, Required>,
-  QueryType extends Obj<any, Required>,
-  ReturnTypes extends Schema<any, Required>[]
+  BodyType extends Obj<Required, any>,
+  ParamsType extends Obj<Required, any>,
+  QueryType extends Obj<Required, any>,
+  ReturnTypes extends Schema<Required, any>[]
 >(
   options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes>,
   next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>

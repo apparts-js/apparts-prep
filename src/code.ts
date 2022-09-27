@@ -25,12 +25,12 @@ export const httpCodeSchema = <
   type B = Readonly<typeof type>;
 
   return new Obj<
+    Required,
     {
-      code: Value<A, Required>;
+      code: Value<Required, A>;
       message: Message;
-      type: Value<B, Required>;
-    },
-    Required
+      type: Value<Required, B>;
+    }
   >({
     code: new Value(code),
     message,

@@ -1,6 +1,8 @@
-const description = { type: "string", optional: true };
-const title = { type: "string", optional: true };
-
+const rest = {
+  description: { type: "string", optional: true },
+  title: { type: "string", optional: true },
+  semantic: { type: "string", optional: true },
+};
 const rtype = {
   type: "oneOf",
 };
@@ -9,8 +11,7 @@ const oneOf = {
   type: "object",
   keys: {
     type: { value: "oneOf" },
-    description,
-    title,
+    ...rest,
     alternatives: {
       type: "array",
       items: rtype,
@@ -22,8 +23,7 @@ const objectKeys = {
   type: "object",
   keys: {
     type: { value: "object" },
-    description,
-    title,
+    ...rest,
     keys: {
       type: "object",
       values: {
@@ -36,8 +36,7 @@ const objectValues = {
   type: "object",
   keys: {
     type: { value: "object" },
-    description,
-    title,
+    ...rest,
     values: rtype,
   },
 };
@@ -47,16 +46,14 @@ const array = {
   keys: {
     type: { value: "array" },
     items: rtype,
-    description,
-    title,
+    ...rest,
   },
 };
 
 const directType = {
   type: "object",
   keys: {
-    description,
-    title,
+    ...rest,
     type: {
       type: "oneOf",
       alternatives: [
@@ -67,15 +64,9 @@ const directType = {
         { value: "float" },
         { value: "hex" },
         { value: "base64" },
-        { value: "bool" },
         { value: "boolean" },
         { value: "string" },
         { value: "email" },
-        { value: "array_int" },
-        { value: "array_id" },
-        { value: "password" },
-        { value: "time" },
-        { value: "array_time" },
         { value: "null" },
       ],
     },
@@ -85,8 +76,7 @@ const directType = {
 const valuedType = {
   type: "object",
   keys: {
-    description,
-    title,
+    ...rest,
     value: { type: "/" },
   },
 };
