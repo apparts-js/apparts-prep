@@ -13,7 +13,11 @@ import assertionType from "../apiTypes/preparatorAssertionType";
 import returnType from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
-import { NextFnType, OptionsType } from "./types";
+import { LogErrorFn, LogResponseFn, NextFnType, OptionsType } from "./types";
+import {
+  Response as ExpressResponse,
+  Request as ExpressRequest,
+} from "express";
 
 export const prepare = <
   BodyType extends Obj<any, Required>,
@@ -61,7 +65,7 @@ export const prepare = <
     );
   }
 
-  const f = async function (req, res) {
+  const f = async function (req: ExpressRequest, res: ExpressResponse) {
     res.setHeader("Content-Type", "application/json");
     res.status(200);
     // iterate over the fields specified in the API's assertions
@@ -85,7 +89,7 @@ export const prepare = <
       try {
         valid = check(fields[fieldName], req[fieldName], fieldName);
       } catch (e) /* istanbul ignore next */ {
-        catchError(res, req, e, options.logError, options.logResponse);
+        catchError(req, res, e, options.logError, options.logResponse);
         return;
       }
       if (valid !== true) {
@@ -93,6 +97,7 @@ export const prepare = <
         r[fieldName] = valid;
 
         send(
+          req,
           res,
           JSON.stringify({
             error: "Fieldmissmatch",
@@ -113,10 +118,11 @@ export const prepare = <
       const data = await next(req, res);
       if (typeof data === "object" && data !== null) {
         if (data.type === "HttpError") {
-          catchError(res, req, data, options.logError, options.logResponse);
+          catchError(req, res, data, options.logError, options.logResponse);
           return;
         } else if (data.type === "HttpCode") {
           send(
+            req,
             res,
             JSON.stringify(data.message),
             options.logResponse,
@@ -127,9 +133,9 @@ export const prepare = <
           return;
         }
       }
-      send(res, JSON.stringify(data), options.logResponse);
+      send(req, res, JSON.stringify(data), options.logResponse);
     } catch (e) {
-      catchError(res, req, e, options.logError, options.logResponse);
+      catchError(req, res, e, options.logError, options.logResponse);
     }
   };
 
@@ -143,9 +149,10 @@ export const prepare = <
 };
 
 const send = (
-  res,
+  req: ExpressRequest,
+  res: ExpressResponse,
   body: string,
-  logResponse?: (msg: string) => void,
+  logResponse?: LogResponseFn,
   status?: number
 ) => {
   if (status) {
@@ -153,19 +160,19 @@ const send = (
   }
   res.send(body);
   if (logResponse) {
-    logResponse(body);
+    logResponse(body, req, res);
   }
 };
 
 const catchError = (
-  res,
-  req,
+  req: ExpressRequest,
+  res: ExpressResponse,
   e,
-  logError?: (msg: string) => void,
-  logResponse?: (msg: string) => void
+  logError?: LogErrorFn,
+  logResponse?: LogResponseFn
 ) => {
   if (typeof e === "object" && e !== null && e.type === "HttpError") {
-    send(res, JSON.stringify(e.message), logResponse, e.code);
+    send(req, res, JSON.stringify(e.message), logResponse, e.code);
     return;
   }
   const errorObj = constructErrorObj(req, e);
@@ -176,12 +183,13 @@ const catchError = (
     errorMsg += errorObj + "\n" + e;
   }
   if (logError) {
-    logError(errorMsg);
+    logError(errorMsg, req, res);
   } else {
     console.log(errorMsg);
   }
   res.setHeader("Content-Type", "text/plain");
   send(
+    req,
     res,
     `SERVER ERROR! ${errorObj.ID} Please consider sending` +
       ` this error-message along with a description of what` +

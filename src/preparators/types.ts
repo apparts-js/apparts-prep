@@ -15,6 +15,17 @@ export type ParamsObj = Obj<any, Required>;
 export type QueryObj = Obj<any, Required>;
 export type ReturnsArray = Schema<any, Required>[];
 
+export type LogErrorFn = (
+  msg: string,
+  req: ExpressRequest,
+  res: ExpressResponse
+) => void;
+export type LogResponseFn = (
+  msg: string,
+  req: ExpressRequest,
+  res: ExpressResponse
+) => void;
+
 export type OptionsType<
   BodyType extends BodyObj,
   ParamsType extends ParamsObj,
@@ -27,8 +38,8 @@ export type OptionsType<
   returns: ReturnTypes;
   auth?: string;
   strap?: boolean;
-  logError?: (msg: string) => void;
-  logResponse?: (msg: string) => void;
+  logError?: LogErrorFn;
+  logResponse?: LogResponseFn;
 };
 
 export type RequestType<
