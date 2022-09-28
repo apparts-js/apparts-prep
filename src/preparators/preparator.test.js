@@ -119,13 +119,10 @@ describe("Server error", () => {
     );
     const id = res.text.split(" ")[2];
     expect(res.status).toBe(500);
-    expect(consoleMock.mock.calls[0][0]).toBe("SERVER ERROR");
-    expect(consoleMock.mock.calls[0][1]).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/
+    expect(consoleMock.mock.calls[0][0]).toMatch(
+      /^SERVER ERROR [0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/
     );
-    expect(consoleMock.mock.calls[0][2]).toBe("\n");
-    expect(consoleMock.mock.calls[0][3]).toMatchObject({ message: "ups" });
-    const log = JSON.parse(consoleMock.mock.calls[1][0]);
+    const log = JSON.parse(consoleMock.mock.calls[0][0].split("\n")[1]);
     expect(log.REQUEST.ip).toMatch(/127.0.0.1/);
     expect(log.REQUEST.ua).toMatch(/node-superagent/);
     expect(log.TRACE).toMatch(/Error: ups\n\s*at/);
@@ -158,7 +155,7 @@ describe("Server error", () => {
     );
     const id = res.text.split(" ")[2];
     expect(res.status).toBe(500);
-    const log = JSON.parse(consoleMock.mock.calls[1][0]);
+    const log = JSON.parse(consoleMock.mock.calls[0][0].split("\n")[1]);
     expect(log.REQUEST.ip).toMatch(/127.0.0.1/);
     expect(log.REQUEST.ua).toMatch(/node-superagent/);
     expect(log.TRACE).toMatch(/Error: ups\n\s*at/);
@@ -170,6 +167,46 @@ describe("Server error", () => {
         method: "POST",
       },
     });
+    consoleMock.mockRestore();
+  });
+
+  test("Should produce custom server error with custom log func", async () => {
+    const consoleMock = jest.spyOn(console, "log").mockImplementation(() => {});
+    const logFn = jest.fn();
+
+    app.post(
+      getNextUrl() + ":id",
+      prepare({ receives: {}, returns: [], logError: logFn }, async () => {
+        throw new Error("ups");
+      })
+    );
+    const res = await request(app)
+      .post(getCurrentUrl() + "3?a=1")
+      .send({ test: "me" })
+      .expect("Content-Type", "text/plain; charset=utf-8");
+    expect(res.text).toMatch(
+      /^SERVER ERROR! [0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12} Please consider sending this error-message along with a description of what happend and what you where doing to this email-address: <supportemailaddress goes here>\.$/
+    );
+    const id = res.text.split(" ")[2];
+    expect(res.status).toBe(500);
+    expect(logFn.mock.calls[0][0]).toMatch(
+      /^SERVER ERROR [0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/
+    );
+    const log = JSON.parse(logFn.mock.calls[0][0].split("\n")[1]);
+    expect(log.REQUEST.ip).toMatch(/127.0.0.1/);
+    expect(log.REQUEST.ua).toMatch(/node-superagent/);
+    expect(log.TRACE).toMatch(/Error: ups\n\s*at/);
+    expect(log).toMatchObject({
+      ID: id,
+      USER: "",
+      REQUEST: {
+        url: getCurrentUrl() + "3?a=1",
+        method: "POST",
+        body: { test: "me" },
+        params: { id: "3" },
+      },
+    });
+    expect(consoleMock.mock.calls.length).toBe(0);
     consoleMock.mockRestore();
   });
 });

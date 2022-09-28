@@ -85,21 +85,27 @@ export const prepare = <
       try {
         valid = check(fields[fieldName], req[fieldName], fieldName);
       } catch (e) /* istanbul ignore next */ {
-        catchError(res, req, e);
+        catchError(res, req, e, options.logError, options.logResponse);
         return;
       }
       if (valid !== true) {
         const r = {};
         r[fieldName] = valid;
-        res.status(400).send({
-          error: "Fieldmissmatch",
-          description:
-            Object.keys(valid)
-              .map((key) => valid[key] + ` for field "${key}"`)
-              .join(", ") +
-            " in " +
-            fieldName,
-        });
+
+        send(
+          res,
+          JSON.stringify({
+            error: "Fieldmissmatch",
+            description:
+              Object.keys(valid)
+                .map((key) => valid[key] + ` for field "${key}"`)
+                .join(", ") +
+              " in " +
+              fieldName,
+          }),
+          options.logResponse,
+          400
+        );
         return;
       }
     }
@@ -107,19 +113,23 @@ export const prepare = <
       const data = await next(req, res);
       if (typeof data === "object" && data !== null) {
         if (data.type === "HttpError") {
-          catchError(res, req, data);
+          catchError(res, req, data, options.logError, options.logResponse);
           return;
         } else if (data.type === "HttpCode") {
-          res.status(data.code);
-          res.send(JSON.stringify(data.message));
+          send(
+            res,
+            JSON.stringify(data.message),
+            options.logResponse,
+            data.code
+          );
           return;
         } else if (data.type === "DontRespond") {
           return;
         }
       }
-      res.send(JSON.stringify(data));
+      send(res, JSON.stringify(data), options.logResponse);
     } catch (e) {
-      catchError(res, req, e);
+      catchError(res, req, e, options.logError, options.logResponse);
     }
   };
 
@@ -132,27 +142,53 @@ export const prepare = <
   return f;
 };
 
-const catchError = (res, req, e) => {
+const send = (
+  res,
+  body: string,
+  logResponse?: (msg: string) => void,
+  status?: number
+) => {
+  if (status) {
+    res.status(status);
+  }
+  res.send(body);
+  if (logResponse) {
+    logResponse(body);
+  }
+};
+
+const catchError = (
+  res,
+  req,
+  e,
+  logError?: (msg: string) => void,
+  logResponse?: (msg: string) => void
+) => {
   if (typeof e === "object" && e !== null && e.type === "HttpError") {
-    res.status(e.code);
-    res.send(JSON.stringify(e.message));
+    send(res, JSON.stringify(e.message), logResponse, e.code);
     return;
   }
   const errorObj = constructErrorObj(req, e);
-  console.log("SERVER ERROR", errorObj.ID, "\n", e);
+  let errorMsg = "SERVER ERROR " + errorObj.ID + "\n";
   try {
-    console.log(JSON.stringify(errorObj));
-    console.log(errorObj.TRACE);
+    errorMsg += JSON.stringify(errorObj) + "\n" + errorObj.TRACE;
   } catch (e) /* istanbul ignore next */ {
-    console.log(errorObj);
+    errorMsg += errorObj + "\n" + e;
   }
-  res.status(500);
+  if (logError) {
+    logError(errorMsg);
+  } else {
+    console.log(errorMsg);
+  }
   res.setHeader("Content-Type", "text/plain");
-  res.send(
+  send(
+    res,
     `SERVER ERROR! ${errorObj.ID} Please consider sending` +
       ` this error-message along with a description of what` +
       ` happend and what you where doing to this email-address:` +
-      ` ${config.bugreportEmail}.`
+      ` ${config.bugreportEmail}.`,
+    logResponse,
+    500
   );
 };
 

@@ -27,6 +27,8 @@ export type OptionsType<
   returns: ReturnTypes;
   auth?: string;
   strap?: boolean;
+  logError?: (msg: string) => void;
+  logResponse?: (msg: string) => void;
 };
 
 export type RequestType<
