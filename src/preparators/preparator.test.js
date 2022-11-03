@@ -1,4 +1,4 @@
-import { obj, int } from "@apparts/types";
+import { obj, int, string } from "@apparts/types";
 
 const { defPrep, expectSuccess, app, expectError } = require("./tests/common");
 const { HttpError } = require("../error");
@@ -270,6 +270,55 @@ describe("Manually sending a response", () => {
       })
     );
     await expectSuccess(getCurrentUrl(), {}, "ok123");
+  });
+});
+
+describe("Default values", () => {
+  it("should accept default values", async () => {
+    app.post(
+      getNextUrl(),
+      prepare(
+        {
+          title: "Testendpoint to check behavior of default",
+          receives: {
+            body: obj({
+              deep: obj({
+                hasDefault: string().default("the default"),
+                doesNotHaveDefault: string(),
+              }),
+            }),
+          },
+          returns: [string()],
+        },
+        async ({ body: { deep } }) => {
+          return deep.doesNotHaveDefault + " " + deep.hasDefault;
+        }
+      )
+    );
+    await expectSuccess(
+      getCurrentUrl(),
+      {
+        deep: { hasDefault: "text2", doesNotHaveDefault: "text1" },
+      },
+      "text1 text2"
+    );
+    await expectSuccess(
+      getCurrentUrl(),
+      {
+        deep: { doesNotHaveDefault: "text1" },
+      },
+      "text1 the default"
+    );
+    await expectError(
+      getCurrentUrl(),
+      {
+        deep: {
+          hasDefault: "text2",
+        },
+      },
+      400,
+      { error: "Fieldmissmatch" }
+    );
   });
 });
 

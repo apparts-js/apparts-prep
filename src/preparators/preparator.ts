@@ -8,6 +8,7 @@ import {
   Required,
   Schema,
   obj,
+  fillInDefaultsStrict,
 } from "@apparts/types";
 import assertionType from "../apiTypes/preparatorAssertionType";
 import returnType from "../apiTypes/preparatorReturnType";
@@ -209,6 +210,11 @@ const catchError = (
  * @return {bool} 'true' if everything matched, Error Description if not
  */
 const check = (wanted, given, field) => {
+  /*
+   * TODO: Clean this mess up by using recursiveCheck on the whole
+   * object. Take a look at the branch feature/deep-defaults.
+   */
+
   const keys = Object.keys(wanted);
   for (let i = 0; i < keys.length; i++) {
     const param = keys[i];
@@ -227,7 +233,29 @@ const check = (wanted, given, field) => {
       continue;
     }
 
-    if (!validateAndConvert(wanted, param, given, field)) {
+    if (!convertIfNeeded(wanted, param, given, field)) {
+      const res = {};
+      res[param] = "expected " + wanted[param]["type"];
+      return res;
+    }
+  }
+
+  const newRequest = fillInDefaultsStrict(
+    {
+      type: "object",
+      keys: wanted,
+    },
+    given
+  );
+
+  for (let i = 0; i < keys.length; i++) {
+    const param = keys[i];
+    if (!(param in newRequest) && wanted[param].optional) {
+      continue;
+    }
+    given[param] = newRequest[param];
+
+    if (!recursiveCheck(given[param], wanted[param])) {
       const res = {};
       res[param] = "expected " + wanted[param]["type"];
       return res;
@@ -237,7 +265,7 @@ const check = (wanted, given, field) => {
   return true;
 };
 
-const validateAndConvert = (wanted, param, given, field) => {
+const convertIfNeeded = (wanted, param, given, field) => {
   if (
     types[wanted[param]["type"]] &&
     types[wanted[param]["type"]].conv &&
@@ -249,8 +277,7 @@ const validateAndConvert = (wanted, param, given, field) => {
       return false;
     }
   }
-
-  return recursiveCheck(given[param], wanted[param]);
+  return true;
 };
 
 const constructErrorObj = (req, error) => {
