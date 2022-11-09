@@ -14,12 +14,13 @@ describe("getApi", () => {
               name: {
                 type: "string",
                 default: "no name",
+                optional: true,
                 description: "A name",
               },
             },
             query: {
               filter: { type: "string", optional: true },
-              number: { type: "int", default: 0 },
+              number: { type: "int", default: 0, optional: true },
             },
             params: { id: { type: "id" } },
           },
@@ -104,6 +105,7 @@ describe("getApi", () => {
               name: {
                 type: "string",
                 default: "no name",
+                optional: true,
                 description: "A name",
               },
             },
@@ -300,6 +302,54 @@ describe("getApi", () => {
           description: "This endpoint is full of errors.",
           options: { section: undefined },
         },
+
+        {
+          assertions: {
+            body: {
+              deep: {
+                keys: {
+                  doesNotHaveDefault: {
+                    type: "string",
+                  },
+                  hasDefault: {
+                    type: "string",
+                    default: "the default",
+                    optional: true,
+                  },
+                },
+                type: "object",
+              },
+            },
+            params: {},
+            query: {},
+          },
+          description: "This endpoint is full of defaults.",
+          method: "post",
+          options: {
+            section: "2",
+          },
+          path: "/v/1/defaults",
+          returns: [
+            {
+              status: 200,
+              value: "ok",
+            },
+            {
+              keys: {
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+                error: {
+                  value: "Fieldmissmatch",
+                },
+              },
+              status: 400,
+              type: "object",
+            },
+          ],
+          title: "Endpoint with defaults in nested keys",
+        },
       ],
       sections: [
         {
@@ -344,6 +394,12 @@ console.log("Hollow orld");
               subsections: [],
             },
           ],
+        },
+        {
+          id: undefined,
+          title: "More tests",
+          description: undefined,
+          subsections: [],
         },
       ],
     });
@@ -470,12 +526,13 @@ console.log("Hollow orld");
               name: {
                 type: "string",
                 default: "no name",
+                optional: true,
                 description: "A name",
               },
             },
             query: {
               filter: { type: "string", optional: true },
-              number: { type: "int", default: 0 },
+              number: { type: "int", default: 0, optional: true },
             },
             params: { id: { type: "id" } },
           },
@@ -560,6 +617,7 @@ console.log("Hollow orld");
               name: {
                 type: "string",
                 default: "no name",
+                optional: true,
                 description: "A name",
               },
             },

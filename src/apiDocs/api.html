@@ -189,6 +189,10 @@ span.code {
   <span class="version">v1</span>
   <span class="link">Error checkpoint endpoint</span><br/>
              &nbsp;&nbsp;<span class="method">GET</span><code class="block">/v/1/error</code>
+  </a><a href="#post_/v/1/defaults">
+  <span class="version">v1</span>
+  <span class="link">Endpoint with defaults in nested keys</span><br/>
+             &nbsp;&nbsp;<span class="method">POST</span><code class="block">/v/1/defaults</code>
   </a>
       </div>
     </div>
@@ -207,7 +211,7 @@ Testendpoint for multiple purposes</h3>
 
      
         <li>Body: <br><ul>
-                                                               <li><code class="block">/* A name */ <br/>name: <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
+                                                               <li><code class="block">/* A name */ <br/>name: ? <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
         </li></ul></li>
         <li>Params: <br><ul>
                                                                <li><code class="block">id: <span class="type">&lt;id&gt;</span></code></li>
@@ -215,7 +219,7 @@ Testendpoint for multiple purposes</h3>
         <li>Query: <br><ul>
                                                                <li><code class="block">filter: ? <span class="type">&lt;string&gt;</span></code></li>
         </li>
-                                                               <li><code class="block">number: <span class="type">&lt;int&gt;</span> (= 0)</code></li>
+                                                               <li><code class="block">number: ? <span class="type">&lt;int&gt;</span> (= 0)</code></li>
         </li></ul></li>
      </ul>
      <span class="returns">Returns:</span> <br>
@@ -250,7 +254,7 @@ does not match it's behavior.</p>
 
      
         <li>Body: <br><ul>
-                                                               <li><code class="block">/* A name */ <br/>name: <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
+                                                               <li><code class="block">/* A name */ <br/>name: ? <span class="type">&lt;string&gt;</span> (= "no name")</code></li>
         </li></ul></li>
         <li>Params: <br><ul>
                                                                <li><code class="block">id: <span class="type">&lt;id&gt;</span></code></li>
@@ -397,6 +401,34 @@ Error checkpoint endpoint</h3>
      </ul>
      <span class="usage">Usage:</span> <br><br>
      <code class="block">try {<br/>&nbsp;&nbsp;const response = await get("error", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({ error })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+  </div>
+</section><section id="post_/v/1/defaults">
+   <h3><span class="version">v1</span>
+Endpoint with defaults in nested keys</h3>
+   <p >This endpoint is full of defaults.</p>
+   <div class="api">
+     <strong class="method">POST</strong>
+     <span class="path">/v/1/defaults</span><br/>
+     <ul>
+     
+
+     
+        <li>Body: <br><ul>
+                                                               <li><code class="block">deep: {<br/>&nbsp;&nbsp;"hasDefault": ? <span class="type">&lt;string&gt;</span>,<br/>&nbsp;&nbsp;"doesNotHaveDefault": <span class="type">&lt;string&gt;</span><br/>}</code></li>
+        </li></ul></li>
+     </ul>
+     <span class="returns">Returns:</span> <br>
+     <ul>
+     
+        <li>Status: 200
+        <code class="block">"ok"</code></li>
+        
+        <li>Status: 400
+        <code class="block">{<br/>&nbsp;&nbsp;"error": "Fieldmissmatch",<br/>&nbsp;&nbsp;"description": ? <span class="type">&lt;string&gt;</span><br/>}</code></li>
+        
+     </ul>
+     <span class="usage">Usage:</span> <br><br>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await post("defaults", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({ deep })<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
   </div>
 </section>
     </div>

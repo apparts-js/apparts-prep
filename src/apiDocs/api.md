@@ -11,6 +11,7 @@ Commit hash: testcommithash
 - [v1 - POST OneOf endpoint /v/1/cantdecide](#v1-oneof-endpoint)
 - [v1 - PUT Endpoint with JWT Authentication /v/1/withjwt](#v1-endpoint-with-jwt-authentication)
 - [v1 - GET Error checkpoint endpoint /v/1/error](#v1-error-checkpoint-endpoint)
+- [v1 - POST Endpoint with defaults in nested keys /v/1/defaults](#v1-endpoint-with-defaults-in-nested-keys)
 ## Endpoints
 
 
@@ -26,7 +27,7 @@ Behaves radically different, based on what
 - **Body:**
                                          - name:
     ```
-    <string> (= "no name")
+    ? <string> (= "no name")
     ```
                                                        
 - **Params:**
@@ -42,7 +43,7 @@ Behaves radically different, based on what
     ```
                                                          - number:
     ```
-    <int> (= 0)
+    ? <int> (= 0)
     ```
                                                        
 - **Returns:**
@@ -117,7 +118,7 @@ does not match it's behavior.
 - **Body:**
                                          - name:
     ```
-    <string> (= "no name")
+    ? <string> (= "no name")
     ```
                                                        
 - **Params:**
@@ -364,6 +365,50 @@ try {
     .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     })
+    .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    });
+} catch (e) {
+  // If e is not false, then no error-catcher caught the error and
+  // you might want to take care of it
+  e && alert(e);
+}
+```
+### v1 Endpoint with defaults in nested keys
+
+This endpoint is full of defaults.
+
+**Method:** `POST`
+
+**Path:** `/v/1/defaults`
+
+- **Body:**
+                                         - deep:
+    ```
+    {
+      "hasDefault": ? <string>,
+      "doesNotHaveDefault": <string>
+    }
+    ```
+                                                       
+- **Returns:**
+  - Status: 200
+    ```
+    "ok"
+    ```
+  - Status: 400
+    ```
+    {
+      "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
+    ```
+- **Usage:**
+```js
+try {
+  const response = await post("defaults", [  ])
+    .query({  })
+    .data({ deep })
     .on({ status: 400, error: "undefined" }, () => {
        /* handle error */
     });

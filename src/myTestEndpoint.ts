@@ -216,6 +216,25 @@ const myErrorCheckpoint = prepare(
   }
 );
 
+const myNestedDefaults = prepare(
+  {
+    title: "Endpoint with defaults in nested keys",
+    description: `This endpoint is full of defaults.`,
+    receives: {
+      body: obj({
+        deep: obj({
+          hasDefault: string().default("the default"),
+          doesNotHaveDefault: string(),
+        }),
+      }),
+    },
+    returns: [value("ok")],
+  },
+  async () => {
+    return "ok" as const;
+  }
+);
+
 const app = express();
 app.use(express.json());
 section({
@@ -268,6 +287,14 @@ console.log("Hollow orld");
 });
 
 app.get("/v/1/error", myErrorCheckpoint);
+
+section({
+  app,
+  title: "More tests",
+  routes: (app) => {
+    app.post("/v/1/defaults", myNestedDefaults);
+  },
+});
 
 module.exports = {
   myEndpoint,

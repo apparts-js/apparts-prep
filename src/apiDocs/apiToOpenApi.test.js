@@ -46,7 +46,7 @@ const OAPI = {
             name: "number",
             in: "query",
             required: false,
-            allowEmptyValue: false,
+            allowEmptyValue: true,
             schema: { type: "integer" },
           },
         ],
@@ -422,6 +422,70 @@ const OAPI = {
                       required: ["error"],
                     },
                   ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    "/v/1/defaults": {
+      post: {
+        summary: "Endpoint with defaults in nested keys",
+        description: "This endpoint is full of defaults.",
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  deep: {
+                    type: "object",
+                    properties: {
+                      hasDefault: {
+                        type: "string",
+                      },
+                      doesNotHaveDefault: {
+                        type: "string",
+                      },
+                    },
+                    required: ["doesNotHaveDefault"],
+                  },
+                },
+                required: ["deep"],
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+          },
+          400: {
+            description: "",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    error: {
+                      type: "string",
+                    },
+                    description: {
+                      type: "string",
+                    },
+                  },
+                  required: ["error"],
                 },
               },
             },
