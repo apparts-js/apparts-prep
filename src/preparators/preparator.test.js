@@ -286,12 +286,19 @@ describe("Default values", () => {
                 hasDefault: string().default("the default"),
                 doesNotHaveDefault: string(),
               }),
+              shallowDef: string().default("shallow def"),
+              shallowDefFn: string().default(() => "shallow def fn"),
             }),
           },
           returns: [string()],
         },
-        async ({ body: { deep } }) => {
-          return deep.doesNotHaveDefault + " " + deep.hasDefault;
+        async ({ body: { deep, shallowDefFn, shallowDef } }) => {
+          return (
+            deep.doesNotHaveDefault +
+            " " +
+            deep.hasDefault +
+            `, ${shallowDef}, ${shallowDefFn}`
+          );
         }
       )
     );
@@ -300,14 +307,14 @@ describe("Default values", () => {
       {
         deep: { hasDefault: "text2", doesNotHaveDefault: "text1" },
       },
-      "text1 text2"
+      "text1 text2, shallow def, shallow def fn"
     );
     await expectSuccess(
       getCurrentUrl(),
       {
         deep: { doesNotHaveDefault: "text1" },
       },
-      "text1 the default"
+      "text1 the default, shallow def, shallow def fn"
     );
     await expectError(
       getCurrentUrl(),

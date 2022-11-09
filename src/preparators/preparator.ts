@@ -222,7 +222,6 @@ const check = (wanted, given, field) => {
     const exists = param in given && given[param] !== undefined;
     if (!exists) {
       if ("default" in wanted[param]) {
-        given[param] = wanted[param]["default"];
         continue;
       }
       if (wanted[param]["optional"] !== true) {
