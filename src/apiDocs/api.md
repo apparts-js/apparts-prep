@@ -33,7 +33,7 @@ Behaves radically different, based on what
 - **Params:**
                                          - id:
     ```
-    <id>
+    <int>
     ```
                                                        
 - **Query:**
@@ -124,7 +124,7 @@ does not match it's behavior.
 - **Params:**
                                          - id:
     ```
-    <id>
+    <int>
     ```
                                                        
 - **Query:**

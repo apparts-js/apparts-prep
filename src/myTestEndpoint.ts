@@ -68,7 +68,7 @@ const myEndpoint = prepare(
     if (filter) {
       // Return values are JSONified automatically!
       const resp = {
-        arr: [{ a: 1 }, { a: 2, c: null, e: null }],
+        arr: [{ a: 1 }, { a: 2, c: undefined, e: undefined }],
         foo: "really!" as const,
         boo: true,
         objectWithUnknownKeys: {

@@ -85,7 +85,7 @@ describe("Params", () => {
         myIdField: int().semantic("id"),
       }),
     });
-    await expectMiss(path, {}, "params", "myIdField", "id");
+    await expectMiss(path, {}, "params", "myIdField", "int");
   });
   test("Should reject with missing params in request", async () => {
     const path = defPrep("", {
@@ -94,7 +94,7 @@ describe("Params", () => {
         mySecondIdField: int().semantic("id"),
       }),
     });
-    await expectMiss(path, {}, "params", "myIdField", "id");
+    await expectMiss(path, {}, "params", "myIdField", "int");
   });
   test("Should accept with missing optional param in request", async () => {
     const path = defPrep("", {
@@ -131,7 +131,7 @@ describe("Params", () => {
     const path = defPrep(":myfield", {
       params: obj({ myField: int().semantic("id") }),
     });
-    await expectMiss(path + 3, {}, "params", "myField", "id");
+    await expectMiss(path + 3, {}, "params", "myField", "int");
   });
 
   test("Should accept anything", async () => {
@@ -141,7 +141,7 @@ describe("Params", () => {
   });
 
   test("Should reject malformated id", async () => {
-    const tipe = "id";
+    const tipe = "int";
     const path = defPrep(
       ":myField",
       { params: obj({ myField: int().semantic("id") }) },
@@ -223,7 +223,7 @@ describe("Params", () => {
   });
 
   test("Should reject malformated password", async () => {
-    const tipe = "password";
+    const tipe = "string";
     const path = defPrep(
       ":myField",
       { params: obj({ myField: string().semantic("password") }) },
@@ -233,7 +233,7 @@ describe("Params", () => {
   });
 
   test("Should reject malformated time", async () => {
-    const tipe = "time";
+    const tipe = "int";
     const path = defPrep(
       ":myField",
       { params: obj({ myField: int().semantic("time") }) },

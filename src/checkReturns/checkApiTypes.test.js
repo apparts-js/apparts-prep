@@ -268,19 +268,55 @@ describe("Describe error", () => {
 
 1: Status should be 200 and is 200
 Type check yields:
-❌ Value wrong: Expected 'ok',          got 'whut?'
+❌ Value wrong: Value should be 'ok', but got 'whut?'
 
 2: Status should be 400 and is 200
 Error should be:
-❌ Expected Object
+❌ Type missmatch: Value is "whut?" but should be of type '{
+  "type": "object",
+  "keys": {
+    "error": {},
+    "description": {
+      "type": "string",
+      "optional": true
+    }
+  }
+}'
 
 3: Status should be 200 and is 200
 Type check yields:
-❌ Expected Object
+❌ Type missmatch: Value is "whut?" but should be of type '{
+  "type": "object",
+  "keys": {
+    "boo": {
+      "type": "boolean"
+    },
+    "arr": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "keys": {
+          "a": {
+            "type": "int"
+          }
+        }
+      }
+    }
+  }
+}'
 
 4: Status should be 400 and is 200
 Error should be:
-❌ Expected Object`);
+❌ Type missmatch: Value is "whut?" but should be of type '{
+  "type": "object",
+  "keys": {
+    "error": {},
+    "description": {
+      "type": "string",
+      "optional": true
+    }
+  }
+}'`);
     consoleMock.mockRestore();
   });
 });

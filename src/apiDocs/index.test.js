@@ -22,7 +22,7 @@ describe("getApi", () => {
               filter: { type: "string", optional: true },
               number: { type: "int", default: 0, optional: true },
             },
-            params: { id: { type: "id" } },
+            params: { id: { type: "int", semantic: "id" } },
           },
           returns: [
             { status: 200, value: "ok" },
@@ -110,7 +110,7 @@ describe("getApi", () => {
               },
             },
             query: { filter: { type: "string", optional: true } },
-            params: { id: { type: "id" } },
+            params: { id: { type: "int", semantic: "id" } },
           },
           returns: [
             { status: 200, value: "ok" },
@@ -534,7 +534,7 @@ console.log("Hollow orld");
               filter: { type: "string", optional: true },
               number: { type: "int", default: 0, optional: true },
             },
-            params: { id: { type: "id" } },
+            params: { id: { type: "int", semantic: "id" } },
           },
           returns: [
             { status: 200, value: "ok" },
@@ -622,7 +622,7 @@ console.log("Hollow orld");
               },
             },
             query: { filter: { type: "string", optional: true } },
-            params: { id: { type: "id" } },
+            params: { id: { type: "int", semantic: "id" } },
           },
           returns: [
             { status: 200, value: "ok" },

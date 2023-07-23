@@ -99,6 +99,7 @@ objectKeys.keys.keys.values.alternatives = rtype.alternatives.map((t) => ({
   keys: {
     ...(t as ObjType).keys,
     optional: { type: "boolean" as const, optional: true as const },
+    default: { type: "/" as const, optional: true as const },
   },
 }));
 
