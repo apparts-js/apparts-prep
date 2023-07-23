@@ -248,6 +248,9 @@ has already been send.
       - method :: HTTP method used (e.g. POST)
       - ip :: Ip of client
       - ua :: User agent of client
+  - If you want to control how the error is logged, pass to the
+    preparator options a function as
+    ~logError: (msg: string, req: ExpressRequest, res: ExpressResponse) => void~
 
 ** Authentication
 

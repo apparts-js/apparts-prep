@@ -8,12 +8,17 @@ import {
   Required,
   Schema,
   obj,
+  fillInDefaultsStrict,
 } from "@apparts/types";
 import { assertionType } from "../apiTypes/preparatorAssertionType";
 import { returnType } from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
-import { NextFnType, OptionsType } from "./types";
+import { LogErrorFn, LogResponseFn, NextFnType, OptionsType } from "./types";
+import {
+  Response as ExpressResponse,
+  Request as ExpressRequest,
+} from "express";
 
 export const prepare = <
   BodyType extends Obj<Required, any>,
@@ -61,7 +66,7 @@ export const prepare = <
     );
   }
 
-  const f = async function (req, res) {
+  const f = async function (req: ExpressRequest, res: ExpressResponse) {
     res.setHeader("Content-Type", "application/json");
     res.status(200);
     // iterate over the fields specified in the API's assertions
@@ -85,21 +90,28 @@ export const prepare = <
       try {
         valid = check(fields[fieldName], req[fieldName], fieldName);
       } catch (e) /* istanbul ignore next */ {
-        catchError(res, req, e);
+        catchError(req, res, e, options.logError, options.logResponse);
         return;
       }
       if (valid !== true) {
         const r = {};
         r[fieldName] = valid;
-        res.status(400).send({
-          error: "Fieldmissmatch",
-          description:
-            Object.keys(valid)
-              .map((key) => valid[key] + ` for field "${key}"`)
-              .join(", ") +
-            " in " +
-            fieldName,
-        });
+
+        send(
+          req,
+          res,
+          JSON.stringify({
+            error: "Fieldmissmatch",
+            description:
+              Object.keys(valid)
+                .map((key) => valid[key] + ` for field "${key}"`)
+                .join(", ") +
+              " in " +
+              fieldName,
+          }),
+          options.logResponse,
+          400
+        );
         return;
       }
     }
@@ -107,19 +119,24 @@ export const prepare = <
       const data = await next(req, res);
       if (typeof data === "object" && data !== null) {
         if (data.type === "HttpError") {
-          catchError(res, req, data);
+          catchError(req, res, data, options.logError, options.logResponse);
           return;
         } else if (data.type === "HttpCode") {
-          res.status(data.code);
-          res.send(JSON.stringify(data.message));
+          send(
+            req,
+            res,
+            JSON.stringify(data.message),
+            options.logResponse,
+            data.code
+          );
           return;
         } else if (data.type === "DontRespond") {
           return;
         }
       }
-      res.send(JSON.stringify(data));
+      send(req, res, JSON.stringify(data), options.logResponse);
     } catch (e) {
-      catchError(res, req, e);
+      catchError(req, res, e, options.logError, options.logResponse);
     }
   };
 
@@ -132,27 +149,55 @@ export const prepare = <
   return f;
 };
 
-const catchError = (res, req, e) => {
+const send = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+  body: string,
+  logResponse?: LogResponseFn,
+  status?: number
+) => {
+  if (status) {
+    res.status(status);
+  }
+  res.send(body);
+  if (logResponse) {
+    logResponse(body, req, res);
+  }
+};
+
+const catchError = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+  e,
+  logError?: LogErrorFn,
+  logResponse?: LogResponseFn
+) => {
   if (typeof e === "object" && e !== null && e.type === "HttpError") {
-    res.status(e.code);
-    res.send(JSON.stringify(e.message));
+    send(req, res, JSON.stringify(e.message), logResponse, e.code);
     return;
   }
   const errorObj = constructErrorObj(req, e);
-  console.log("SERVER ERROR", errorObj.ID, "\n", e);
+  let errorMsg = "SERVER ERROR " + errorObj.ID + "\n";
   try {
-    console.log(JSON.stringify(errorObj));
-    console.log(errorObj.TRACE);
+    errorMsg += JSON.stringify(errorObj) + "\n" + errorObj.TRACE;
   } catch (e) /* istanbul ignore next */ {
-    console.log(errorObj);
+    errorMsg += errorObj + "\n" + e;
   }
-  res.status(500);
+  if (logError) {
+    logError(errorMsg, req, res);
+  } else {
+    console.log(errorMsg);
+  }
   res.setHeader("Content-Type", "text/plain");
-  res.send(
+  send(
+    req,
+    res,
     `SERVER ERROR! ${errorObj.ID} Please consider sending` +
       ` this error-message along with a description of what` +
       ` happend and what you where doing to this email-address:` +
-      ` ${config.bugreportEmail}.`
+      ` ${config.bugreportEmail}.`,
+    logResponse,
+    500
   );
 };
 
@@ -165,6 +210,11 @@ const catchError = (res, req, e) => {
  * @return {bool} 'true' if everything matched, Error Description if not
  */
 const check = (wanted, given, field) => {
+  /*
+   * TODO: Clean this mess up by using recursiveCheck on the whole
+   * object. Take a look at the branch feature/deep-defaults.
+   */
+
   const keys = Object.keys(wanted);
   for (let i = 0; i < keys.length; i++) {
     const param = keys[i];
@@ -172,7 +222,6 @@ const check = (wanted, given, field) => {
     const exists = param in given && given[param] !== undefined;
     if (!exists) {
       if ("default" in wanted[param]) {
-        given[param] = wanted[param]["default"];
         continue;
       }
       if (wanted[param]["optional"] !== true) {
@@ -183,7 +232,29 @@ const check = (wanted, given, field) => {
       continue;
     }
 
-    if (!validateAndConvert(wanted, param, given, field)) {
+    if (!convertIfNeeded(wanted, param, given, field)) {
+      const res = {};
+      res[param] = "expected " + wanted[param]["type"];
+      return res;
+    }
+  }
+
+  const newRequest = fillInDefaultsStrict(
+    {
+      type: "object",
+      keys: wanted,
+    },
+    given
+  );
+
+  for (let i = 0; i < keys.length; i++) {
+    const param = keys[i];
+    if (!(param in newRequest) && wanted[param].optional) {
+      continue;
+    }
+    given[param] = newRequest[param];
+
+    if (!recursiveCheck(given[param], wanted[param])) {
       const res = {};
       res[param] = "expected " + wanted[param]["type"];
       return res;
@@ -193,7 +264,7 @@ const check = (wanted, given, field) => {
   return true;
 };
 
-const validateAndConvert = (wanted, param, given, field) => {
+const convertIfNeeded = (wanted, param, given, field) => {
   if (
     types[wanted[param]["type"]] &&
     types[wanted[param]["type"]].conv &&
@@ -205,8 +276,7 @@ const validateAndConvert = (wanted, param, given, field) => {
       return false;
     }
   }
-
-  return recursiveCheck(given[param], wanted[param]);
+  return true;
 };
 
 const constructErrorObj = (req, error) => {
