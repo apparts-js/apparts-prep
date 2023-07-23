@@ -9,8 +9,8 @@ import {
   Schema,
   obj,
 } from "@apparts/types";
-import assertionType from "../apiTypes/preparatorAssertionType";
-import returnType from "../apiTypes/preparatorReturnType";
+import { assertionType } from "../apiTypes/preparatorAssertionType";
+import { returnType } from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
 import { NextFnType, OptionsType } from "./types";

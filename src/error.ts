@@ -23,11 +23,11 @@ export const httpErrorSchema = <Code extends number, Message extends string>(
     {
       code: Value<Required, A>;
       message: Obj<
+        Required,
         {
           error: Value<Required, B>;
           description: BaseType<_Optional, string>;
-        },
-        Required
+        }
       >;
       type: Value<Required, C>;
     }

@@ -359,7 +359,7 @@ const object = async (tipe, path, right, wrong, isParams) => {
   await wrong(path, { firstKey: "abc@de.de" }, tipe);
   await wrong(
     path,
-    { firstKey: "abc@de.de", secondKey: 3, thirdKey: true },
+    { firstKey: "abc@de.de", secondKey: 4, thirdKey: true },
     tipe
   );
   await right(path, { firstKey: "abc@de.de", secondKey: 3 }, tipe);

@@ -1,6 +1,6 @@
 import { Schema, Obj, Value, Required, InferType } from "@apparts/types";
 
-type MessageType = InferType<Schema<any, Required>>;
+type MessageType = InferType<Schema<Required, any>>;
 
 export class HttpCode<Code extends number, Message extends MessageType> {
   public code: Code;
@@ -15,7 +15,7 @@ export class HttpCode<Code extends number, Message extends MessageType> {
 
 export const httpCodeSchema = <
   Code extends number,
-  Message extends Schema<any, Required>
+  Message extends Schema<Required, any>
 >(
   code: Code,
   message: Message
