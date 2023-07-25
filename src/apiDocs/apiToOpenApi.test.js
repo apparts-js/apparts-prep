@@ -352,24 +352,12 @@ const OAPI = {
             content: {
               "application/json": {
                 schema: {
-                  anyOf: [
-                    {
-                      type: "object",
-                      properties: {
-                        error: { type: "string" },
-                        description: { type: "string" },
-                      },
-                      required: ["error"],
-                    },
-                    {
-                      type: "object",
-                      properties: {
-                        error: { type: "string" },
-                        description: { type: "string" },
-                      },
-                      required: ["error"],
-                    },
-                  ],
+                  type: "object",
+                  properties: {
+                    error: { type: "string" },
+                    description: { type: "string" },
+                  },
+                  required: ["error"],
                 },
               },
             },

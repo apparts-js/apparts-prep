@@ -14,7 +14,13 @@ import { assertionType } from "../apiTypes/preparatorAssertionType";
 import { returnType } from "../apiTypes/preparatorReturnType";
 import { get as getConfig } from "@apparts/config";
 const config = getConfig("types-config");
-import { LogErrorFn, LogResponseFn, NextFnType, OptionsType } from "./types";
+import {
+  AuthResponse,
+  LogErrorFn,
+  LogResponseFn,
+  NextFnType,
+  OptionsType,
+} from "./types";
 import {
   Response as ExpressResponse,
   Request as ExpressRequest,
@@ -24,10 +30,11 @@ export const prepare = <
   BodyType extends Obj<Required, any>,
   ParamsType extends Obj<Required, any>,
   QueryType extends Obj<Required, any>,
-  ReturnTypes extends Schema<Required, any>[]
+  ReturnTypes extends Schema<Required, any>[],
+  AuthType extends AuthResponse
 >(
-  options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes>,
-  next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes>
+  options: OptionsType<BodyType, ParamsType, QueryType, ReturnTypes, AuthType>,
+  next: NextFnType<BodyType, ParamsType, QueryType, ReturnTypes, AuthType>
 ) => {
   const {
     body: bodySchema = obj({}),
@@ -70,6 +77,14 @@ export const prepare = <
     res.setHeader("Content-Type", "application/json");
     res.status(200);
     // iterate over the fields specified in the API's assertions
+
+    let accessResult: AuthType;
+    try {
+      accessResult = await options.hasAccess(req);
+    } catch (err) {
+      catchError(req, res, err, options.logError, options.logResponse);
+      return;
+    }
 
     if (options.strap) {
       for (const fieldName in fields) {
@@ -116,7 +131,7 @@ export const prepare = <
       }
     }
     try {
-      const data = await next(req, res);
+      const data = await next(req, res, accessResult);
       if (typeof data === "object" && data !== null) {
         if (data.type === "HttpError") {
           catchError(req, res, data, options.logError, options.logResponse);

@@ -14,6 +14,7 @@ export type BodyObj = Obj<Required, any>;
 export type ParamsObj = Obj<Required, any>;
 export type QueryObj = Obj<Required, any>;
 export type ReturnsArray = Schema<Required, any>[];
+export type AuthResponse = unknown;
 
 export type LogErrorFn = (
   msg: string,
@@ -26,11 +27,18 @@ export type LogResponseFn = (
   res: ExpressResponse
 ) => void;
 
+export type CheckAccessFn<AuthType extends AuthResponse> = {
+  (req: ExpressRequest): Promise<AuthType>;
+  description?: string;
+  returns?: ReturnsArray;
+};
+
 export type OptionsType<
   BodyType extends BodyObj,
   ParamsType extends ParamsObj,
   QueryType extends QueryObj,
-  ReturnTypes extends ReturnsArray
+  ReturnTypes extends ReturnsArray,
+  AuthType extends AuthResponse
 > = {
   title: string;
   description?: string;
@@ -40,6 +48,7 @@ export type OptionsType<
   strap?: boolean;
   logError?: LogErrorFn;
   logResponse?: LogResponseFn;
+  hasAccess: CheckAccessFn<AuthType>;
 };
 
 export type RequestType<
@@ -58,10 +67,12 @@ export type NextFnType<
   BodyType extends BodyObj,
   ParamsType extends ParamsObj,
   QueryType extends QueryObj,
-  ReturnTypes extends ReturnsArray
+  ReturnTypes extends ReturnsArray,
+  AuthType extends AuthResponse
 > = (
   req: RequestType<BodyType, ParamsType, QueryType>,
-  res: ResponseType
+  res: ResponseType,
+  authResult: AuthType
 ) => Promise<OneOfReturnTypes<ReturnTypes>>;
 
 export type NextFnWithAuthType<

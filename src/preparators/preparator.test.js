@@ -27,6 +27,7 @@ describe("Options.strap", () => {
       getNextUrl() + ":tooMuch/:expected",
       prepare(
         {
+          hasAccess: async () => true,
           receives: {
             body: obj({ expected: int() }),
             query: obj({ expected: int() }),
@@ -61,18 +62,24 @@ describe("HttpErrors", () => {
   test("Should produce code 400 when HttpError returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        return new HttpError(400, "Bad Request");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          return new HttpError(400, "Bad Request");
+        }
+      )
     );
     await expectError(getCurrentUrl(), {}, 400, { error: "Bad Request" });
   });
   test("Should produce code 400 when HttpError thrown", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        throw new HttpError(400, "Bad Request");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          throw new HttpError(400, "Bad Request");
+        }
+      )
     );
     await expectError(getCurrentUrl(), {}, 400, { error: "Bad Request" });
   });
@@ -80,18 +87,24 @@ describe("HttpErrors", () => {
   test("Should produce code 400 and have error field", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        return new HttpError(400, "error text");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          return new HttpError(400, "error text");
+        }
+      )
     );
     await expectError(getCurrentUrl(), {}, 400, { error: "error text" });
   });
   test("Should produce code 400 and have error, description field", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        throw new HttpError(400, "error text2", "description, too");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          throw new HttpError(400, "error text2", "description, too");
+        }
+      )
     );
     await expectError(getCurrentUrl(), {}, 400, {
       error: "error text2",
@@ -106,9 +119,12 @@ describe("Server error", () => {
 
     app.post(
       getNextUrl() + ":id",
-      prepare({ receives: {}, returns: [] }, async () => {
-        throw new Error("ups");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          throw new Error("ups");
+        }
+      )
     );
     const res = await request(app)
       .post(getCurrentUrl() + "3?a=1")
@@ -143,9 +159,12 @@ describe("Server error", () => {
 
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        throw new Error("ups");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          throw new Error("ups");
+        }
+      )
     );
     const res = await request(app)
       .post(getCurrentUrl())
@@ -176,9 +195,17 @@ describe("Server error", () => {
 
     app.post(
       getNextUrl() + ":id",
-      prepare({ receives: {}, returns: [], logError: logFn }, async () => {
-        throw new Error("ups");
-      })
+      prepare(
+        {
+          hasAccess: async () => true,
+          receives: {},
+          returns: [],
+          logError: logFn,
+        },
+        async () => {
+          throw new Error("ups");
+        }
+      )
     );
     const res = await request(app)
       .post(getCurrentUrl() + "3?a=1")
@@ -215,18 +242,24 @@ describe("HttpCodes", () => {
   test("Should produce code 300 when HttpCode(300) returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        return new HttpCode(300, { test: true });
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          return new HttpCode(300, { test: true });
+        }
+      )
     );
     await expectError(getCurrentUrl(), {}, 300, { test: true });
   });
   test("Should produce code 300 when HttpCode(300) with no message returned", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async () => {
-        return new HttpCode(300, "redirect");
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async () => {
+          return new HttpCode(300, "redirect");
+        }
+      )
     );
     const res = await request(app)
       .post(getCurrentUrl())
@@ -239,9 +272,12 @@ describe("Function not async", () => {
   test("Should work with normal function as parameter", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, () => {
-        return "ok";
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        () => {
+          return "ok";
+        }
+      )
     );
     await expectSuccess(getCurrentUrl());
   });
@@ -252,9 +288,15 @@ describe("Unknown field", () => {
     expect(() =>
       app.post(
         getNextUrl(),
-        prepare({ receives: { sixpack: obj({ field: int() }) } }, () => {
-          return "ok";
-        })
+        prepare(
+          {
+            hasAccess: async () => true,
+            receives: { sixpack: obj({ field: int() }) },
+          },
+          () => {
+            return "ok";
+          }
+        )
       )
     ).toThrowError("PREPARATOR: Nope, your assertions are not well defined!");
   });
@@ -264,10 +306,13 @@ describe("Manually sending a response", () => {
   it("should manually send a response", async () => {
     app.post(
       getNextUrl(),
-      prepare({ receives: {}, returns: [] }, async (req, res) => {
-        res.send('"ok123"');
-        return new DontRespond();
-      })
+      prepare(
+        { hasAccess: async () => true, receives: {}, returns: [] },
+        async (req, res) => {
+          res.send('"ok123"');
+          return new DontRespond();
+        }
+      )
     );
     await expectSuccess(getCurrentUrl(), {}, "ok123");
   });
@@ -279,6 +324,7 @@ describe("Default values", () => {
       getNextUrl(),
       prepare(
         {
+          hasAccess: async () => true,
           title: "Testendpoint to check behavior of default",
           receives: {
             body: obj({

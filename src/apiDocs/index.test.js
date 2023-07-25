@@ -219,32 +219,21 @@ describe("getApi", () => {
           returns: [
             { status: 200, value: "ok" },
             {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Unauthorized" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
-            {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Token invalid" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
-            {
               status: 400,
               type: "object",
               keys: {
                 error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
+            },
+            {
+              status: 401,
+              type: "object",
+              keys: {
+                error: { value: "Unauthorized" },
                 description: {
                   optional: true,
                   type: "string",
@@ -433,7 +422,9 @@ console.log("Hollow orld");
           ],
           title: "Typeless endpoint",
           description: "This endpoint is typeless but not pointless.",
-          options: { section: "0" },
+          options: {
+            section: "0",
+          },
         },
         {
           method: "put",
@@ -441,28 +432,6 @@ console.log("Hollow orld");
           assertions: { body: {}, params: {}, query: {} },
           returns: [
             { status: 200, value: "ok" },
-            {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Unauthorized" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
-            {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Token invalid" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
             {
               status: 400,
               type: "object",
@@ -474,10 +443,24 @@ console.log("Hollow orld");
                 },
               },
             },
+            {
+              status: 401,
+              type: "object",
+              keys: {
+                error: { value: "Unauthorized" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
+            },
           ],
           title: "Endpoint with JWT Authentication",
           description: "You shall not pass, unless you have a JWT.",
-          options: { auth: "Bearer jwt", section: "0.1" },
+          options: {
+            auth: "Bearer jwt",
+            section: "0.1",
+          },
         },
       ],
       sections: [
@@ -693,32 +676,21 @@ console.log("Hollow orld");
           returns: [
             { status: 200, value: "ok" },
             {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Unauthorized" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
-            {
-              status: 401,
-              type: "object",
-              keys: {
-                error: { value: "Token invalid" },
-                description: {
-                  optional: true,
-                  type: "string",
-                },
-              },
-            },
-            {
               status: 400,
               type: "object",
               keys: {
                 error: { value: "Fieldmissmatch" },
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+              },
+            },
+            {
+              status: 401,
+              type: "object",
+              keys: {
+                error: { value: "Unauthorized" },
                 description: {
                   optional: true,
                   type: "string",

@@ -60,7 +60,7 @@ const defPrep = (path, assumptions, tipe) => {
   app.post(
     "/a" + lastPath + "/" + path,
     prepare(
-      { receives: assumptions, returns: [] },
+      { receives: assumptions, returns: [], hasAccess: async () => true },
       async ({ body, query, params }) => {
         if (tipe) {
           const val = { ...body, ...query, ...params }["myField"];

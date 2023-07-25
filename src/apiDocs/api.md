@@ -274,24 +274,17 @@ You shall not pass, unless you have a JWT.
     ```
     "ok"
     ```
-  - Status: 401
-    ```
-    {
-      "error": "Unauthorized",
-      "description": ? <string>
-    }
-    ```
-  - Status: 401
-    ```
-    {
-      "error": "Token invalid",
-      "description": ? <string>
-    }
-    ```
   - Status: 400
     ```
     {
       "error": "Fieldmissmatch",
+      "description": ? <string>
+    }
+    ```
+  - Status: 401
+    ```
+    {
+      "error": "Unauthorized",
       "description": ? <string>
     }
     ```
@@ -302,13 +295,10 @@ try {
     .query({  })
     .data({  })
     .auth(user)
-    .on({ status: 401, error: "undefined" }, () => {
-       /* handle error */
-    })
-    .on({ status: 401, error: "undefined" }, () => {
-       /* handle error */
-    })
     .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 401, error: "undefined" }, () => {
        /* handle error */
     });
 } catch (e) {
