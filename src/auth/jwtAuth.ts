@@ -7,14 +7,14 @@ export const validJwt = (webtokenkey: string) => {
   const fn = async (req: Request) => {
     const token = bearerAuth(req);
     if (!token) {
-      throw new HttpError(401, "Unauthorized");
+      return new HttpError(401, "Unauthorized");
     }
 
     try {
       const jwt = verifyJWT(token, webtokenkey);
       return jwt;
     } catch (err) {
-      throw new HttpError(401, "Unauthorized");
+      return new HttpError(401, "Unauthorized");
     }
   };
   fn.description = "Bearer jwt";

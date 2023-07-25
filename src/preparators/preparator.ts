@@ -1,4 +1,3 @@
-import { httpErrorSchema } from "../error";
 import { v1 as uuidv1 } from "uuid";
 import {
   types,
@@ -25,6 +24,15 @@ import {
   Response as ExpressResponse,
   Request as ExpressRequest,
 } from "express";
+import { httpErrorSchema } from "../error";
+import { HttpCode } from "../code";
+
+enum DataType {
+  HttpError,
+  HttpCode,
+  DontRespond,
+  Data,
+}
 
 export const prepare = <
   BodyType extends Obj<Required, any>,
@@ -81,6 +89,25 @@ export const prepare = <
     let accessResult: AuthType;
     try {
       accessResult = await options.hasAccess(req);
+      switch (detectTypeOfData(accessResult)) {
+        case DataType.HttpError:
+          catchError(
+            req,
+            res,
+            accessResult,
+            options.logError,
+            options.logResponse
+          );
+          return;
+        case DataType.HttpCode:
+          sendHttpCode(
+            accessResult as HttpCode<any, any>,
+            req,
+            res,
+            options.logResponse
+          );
+          return;
+      }
     } catch (err) {
       catchError(req, res, err, options.logError, options.logResponse);
       return;
@@ -132,24 +159,18 @@ export const prepare = <
     }
     try {
       const data = await next(req, res, accessResult);
-      if (typeof data === "object" && data !== null) {
-        if (data.type === "HttpError") {
+      switch (detectTypeOfData(data)) {
+        case DataType.HttpError:
           catchError(req, res, data, options.logError, options.logResponse);
           return;
-        } else if (data.type === "HttpCode") {
-          send(
-            req,
-            res,
-            JSON.stringify(data.message),
-            options.logResponse,
-            data.code
-          );
+        case DataType.HttpCode:
+          sendHttpCode(data, req, res, options.logResponse);
           return;
-        } else if (data.type === "DontRespond") {
+        case DataType.DontRespond:
           return;
-        }
+        default:
+          send(req, res, JSON.stringify(data), options.logResponse);
       }
-      send(req, res, JSON.stringify(data), options.logResponse);
     } catch (e) {
       catchError(req, res, e, options.logError, options.logResponse);
     }
@@ -178,6 +199,28 @@ const send = (
   if (logResponse) {
     logResponse(body, req, res);
   }
+};
+
+const detectTypeOfData = (data: unknown) => {
+  if (typeof data === "object" && data !== null) {
+    if ((data as { type: unknown }).type === "HttpError") {
+      return DataType.HttpError;
+    } else if ((data as { type: unknown }).type === "HttpCode") {
+      return DataType.HttpCode;
+    } else if ((data as { type: unknown }).type === "DontRespond") {
+      return DataType.DontRespond;
+    }
+  }
+  return DataType.Data;
+};
+
+const sendHttpCode = (
+  data: HttpCode<any, any>,
+  req: ExpressRequest,
+  res: ExpressResponse,
+  logResponse?: LogResponseFn
+) => {
+  send(req, res, JSON.stringify(data.message), logResponse, data.code);
 };
 
 const catchError = (
