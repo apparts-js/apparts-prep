@@ -6,6 +6,7 @@ import {
   prepare,
   section,
   validJwt,
+  freeAccess,
 } from "./index";
 import {
   obj,
@@ -25,7 +26,7 @@ const myEndpoint = prepare(
     title: "Testendpoint for multiple purposes",
     description: `Behaves radically different, based on what
  the filter is.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: {
       body: obj({
         name: string().default("no name").description("A name"),
@@ -97,7 +98,7 @@ const myFaultyEndpoint = prepare(
     title: "Faulty Testendpoint",
     description: `Ment to be found to be faulty. It's documentation
 does not match it's behavior.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: {
       body: obj({
         name: string().default("no name").description("A name"),
@@ -153,7 +154,7 @@ const myOneOfEndpoint = prepare(
   {
     title: "OneOf endpoint",
     description: `This endpoint can't decide what it wants.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: {
       body: obj({
         value: oneOf([
@@ -173,7 +174,7 @@ const myTypelessEndpoint = prepare(
   {
     title: "Typeless endpoint",
     description: `This endpoint is typeless but not pointless.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: {},
     returns: [],
   },
@@ -199,7 +200,7 @@ const myErrorCheckpoint = prepare(
   {
     title: "Error checkpoint endpoint",
     description: `This endpoint is full of errors.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: { query: obj({ error: boolean() }) },
     returns: [
       httpErrorSchema(400, "Text 1"),
@@ -225,7 +226,7 @@ const myNestedDefaults = prepare(
   {
     title: "Endpoint with defaults in nested keys",
     description: `This endpoint is full of defaults.`,
-    hasAccess: async () => true,
+    hasAccess: freeAccess,
     receives: {
       body: obj({
         deep: obj({
