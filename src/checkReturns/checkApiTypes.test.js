@@ -3,6 +3,7 @@ const { useChecks, isNotFieldmissmatch } = require("./checkApiTypes");
 const myEndpoint = require("../myTestEndpoint");
 const request = require("supertest");
 import { httpErrorSchema } from "../error";
+import { sign } from "jsonwebtoken";
 
 const app = myEndpoint.app;
 const { checkType, allChecked } = useChecks(myEndpoint);
@@ -318,5 +319,49 @@ Error should be:
   }
 }'`);
     consoleMock.mockRestore();
+  });
+});
+
+describe("myJWTAuthenticatedEndpoint, additional return types from auth", () => {
+  test("Success access", async () => {
+    const response = await request(app)
+      .put("/v/1/withjwt")
+      .set("Authorization", "Bearer " + sign({}, "secret"));
+    expect(checkType(response, "myJWTAuthenticatedEndpoint")).toBeTruthy();
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe("ok");
+  });
+
+  it("should notice, that 401 is missing", async () => {
+    expect(() => allChecked("myJWTAuthenticatedEndpoint")).toThrow({
+      message: `Not all possible return combinations for ### myJWTAuthenticatedEndpoint ### have been tested!
+MISSING: [
+  {
+    "type": "object",
+    "keys": {
+      "error": {
+        "value": "Unauthorized"
+      },
+      "description": {
+        "type": "string",
+        "optional": true
+      }
+    }
+  }
+]`,
+    });
+  });
+
+  it("should get 401", async () => {
+    const response = await request(app).put("/v/1/withjwt");
+    expect(checkType(response, "myJWTAuthenticatedEndpoint")).toBeTruthy();
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toMatchObject({
+      error: "Unauthorized",
+    });
+  });
+
+  it("should have all tested", async () => {
+    expect(allChecked("myJWTAuthenticatedEndpoint")).toBeTruthy();
   });
 });

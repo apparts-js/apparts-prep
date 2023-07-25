@@ -187,7 +187,7 @@ const myJWTAuthenticatedEndpoint = prepare(
   {
     title: "Endpoint with JWT Authentication",
     description: "You shall not pass, unless you have a JWT.",
-    hasAccess: validJwt(""),
+    hasAccess: validJwt("secret"),
     receives: {},
     returns: [value("ok")],
   },
@@ -308,5 +308,6 @@ module.exports = {
   myFaultyEndpoint,
   myTypelessEndpoint,
   myErrorCheckpoint,
+  myJWTAuthenticatedEndpoint,
   app,
 };

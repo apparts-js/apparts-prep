@@ -179,9 +179,17 @@ export const prepare = <
   f.assertions = fields;
   f.options = {
     ...options,
-    returns: [...returnTypes, httpErrorSchema(400, "Fieldmissmatch").getType()],
+    ...(options.hasAccess.description
+      ? { auth: options.hasAccess.description }
+      : {}),
+    returns: [
+      ...returnTypes,
+      httpErrorSchema(400, "Fieldmissmatch").getType(),
+      ...(options.hasAccess.returns || []).map((r) => r.getType()),
+    ],
   };
   delete f.options.receives;
+  delete f.options.hasAccess;
   return f;
 };
 

@@ -39,20 +39,13 @@ export const getRoutes = (app: Application) => {
           returns = [],
           title = "",
           description,
-          hasAccess,
           ...options
         } = handle.options || {};
-        if (hasAccess.description) {
-          options.auth = hasAccess.description;
-        }
         return {
           method,
           path,
           assertions: formatReceives(handle.assertions),
-          returns: [
-            ...returns,
-            ...(hasAccess.returns || []).map((r) => r.getType()),
-          ],
+          returns: returns,
           title,
           description,
           options: {
