@@ -20,7 +20,6 @@ Under the configuration name =types-config= the following options exist:
 
 More information on how to set this: [[https://github.com/apparts-js/apparts-config][@apparts/config]].
 
-
 * Request Encoding
 
 When requesting an API checked by @apparts/prep, make sure, the
@@ -36,10 +35,10 @@ following holds:
 
 * Usage
 
-The =preparator= function provides a wrapper around express routes. It
+The =prepare= function provides a wrapper around express routes. It
 checks the types of the requests and handles errors.
 
-The =preparator= function takes these arguments:
+The =prepare= function takes these arguments:
 - =options <object>= ::
   - =title <string>= :: The title of the route (for documentation).
   - =?description <string>= :: A description of the route (for documentation).
@@ -50,22 +49,32 @@ The =preparator= function takes these arguments:
   - =returns <array>= :: All potential types that can be returned by
     the function (for documentation and for validation). More
     information in the section "Test API Types".
-- =route <func>= :: A (async) function that receives as first parameter
-  the request object from axios, that contains the parsed =body=, =query=,
-  =params=. What the function returns will be returned to the client. If
-  the function throws an HttpError, the result code is set accordingly
-  and the HttpError.message will be returned. If the function throws
-  anything else, a 500 server error will be produced.
+  - hasAccess :: A functions that defines access rights for the
+    individual endpoint. It receives the same parameters as a request
+    handler (see =route=). If the function throws an =HttpError=, access
+    will be rejected. If another error is thrown, a 500 error will be
+    produced. Otherwise access will be granted. The return value of
+    this function will be passed as third parameter to the =route=
+    function. More info below in section Access control.
+- =route <(request, response, accessControlResult) =-> Promise<result>>= :: A
+  (async) function that receives as first parameter the request object
+  from express, but the =body=, =query=, =params= are parsed and type
+  checked. What the function returns will be returned to the
+  client. If the function throws an =HttpError=, the result code is set
+  accordingly and the =HttpError.message= will be returned. Also
+  =HttpCode= and =DontRespond= can be returned, see below. If the
+  function throws anything else, a 500 server error will be produced.
 
 #+BEGIN_SRC js
   const { boolean, value, obj, int, objValues } = require("@apparts/types");
-  const { preparator, HttpError, httpErrorSchema } = require("@apparts/prep");
+  const { prepare, HttpError, httpErrorSchema, anybody } = require("@apparts/prep");
 
-  const myEndpoint = preparator(
+  const myEndpoint = prepare(
     {
       title: "Testendpoint for multiple purposes",
       description: `Behaves radically different, based on what
    the filter is.`,
+      hasAccess: anybody, // everybody has access
       receives: {
         body: obj({
           name: string().default("no name").description("A name"),
@@ -101,7 +110,7 @@ The =preparator= function takes these arguments:
         }),
       ],
     },
-    async ({ body: { name }, query: { filter }, params: { id } }) => {
+    async ({ body: { name }, query: { filter }, params: { id } }, res, accessControlResult) => {
       if (name.length > 100) {
         new HttpError(400, "Name too long");
       }
@@ -139,10 +148,10 @@ The =preparator= function takes these arguments:
 Within the =route= function you can use the =HttpCode= class as follows:
 
 #+BEGIN_SRC js
-  const { preparator, HttpCode, httpCodeSchema } = require("@apparts/prep");
+  const { prepare, HttpCode, httpCodeSchema } = require("@apparts/prep");
   const { obj, string } = require("@apparts/types");
 
-  const myEndpoint = preparator({
+  const myEndpoint = prepare({
     title: "Endpoint that handles responding",
     /* ...*/
     returns: [httpCodeSchema(304, obj({ "whatever": string() }))],
@@ -157,10 +166,10 @@ Within the =route= function you can use the =HttpCode= class as follows:
 Within the =route= function you can use the =HttpError= class as follows:
 
 #+BEGIN_SRC js
-  const { preparator, HttpError, httpErrorSchema } = require("@apparts/prep");
+  const { prepare, HttpError, httpErrorSchema } = require("@apparts/prep");
   const { obj, string } = require("@apparts/types");
 
-  const myEndpoint = preparator({
+  const myEndpoint = prepare({
     title: "Endpoint that handles responding",
     /* ...*/
     returns: [
@@ -194,9 +203,9 @@ You can return or throw an error.
 ** Sending a response manually
 
 Sometimes you want to handle the response yourself. In these cases you
-can tell preparator to not send for you, using the =DontRespond= class.
+can tell prepare to not send for you, using the =DontRespond= class.
 
-Keep in mind that the preparator already did these calls for you:
+Keep in mind that the prepare already did these calls for you:
 #+BEGIN_SRC js
   res.setHeader("Content-Type", "application/json");
   res.status(200);
@@ -206,9 +215,9 @@ If you want other values, overwrite them by making the respective
 calls on =res= yourself.
 
 #+BEGIN_SRC js
-  const { preparator, DontRespond } = require("@apparts/prep");
+  const { prepare, DontRespond } = require("@apparts/prep");
   
-  const myEndpoint = preparator({
+  const myEndpoint = prepare({
   title: "Endpoint that handles responding",
     /* ...*/
   }, async (req, res) => {
@@ -225,7 +234,7 @@ has already been send.
 ** Error handling by =preperator=
 
 - Should a request not match any of the type assertions as defined, the
-  =preparator= will respond with a status code of 400 and this body:
+  =prepare= will respond with a status code of 400 and this body:
   #+BEGIN_SRC json
   { "error": "Fieldmissmatch", "description": "<explanation>" }
   #+END_SRC
@@ -249,72 +258,173 @@ has already been send.
       - ip :: Ip of client
       - ua :: User agent of client
   - If you want to control how the error is logged, pass to the
-    preparator options a function as
+    prepare options a function as
     ~logError: (msg: string, req: ExpressRequest, res: ExpressResponse) => void~
 
-** Authentication
+** Access Control
 
-The =@apparts/prep= package has a pre-build version that checks a JWT
-for you.
+In the previous examples, all routes were created accessible for
+anybody. That is most likely not what you want.
 
-Ideally, you use this functionality with the [[https://github.com/phuhl/apparts-login-server][@apparts/login-server]]
-package, that provides all the necessary REST endpoints an extendable
-user model and more.
+The =prepare= function expects a =hasAccess= option that must handle
+authentication and authorization. This function receives all
+parameters of the API-call and uses them to determine if access should
+be granted.
 
-For this, instead of =perperator= use the function
-- =prepauthTokenJWT=
+The return behavior of the function defines if access is granted or
+not:
+- If it throws or returns an =HttpError= (from [[https://github.com/apparts-js/apparts-prep][@apparts/prep]]), access
+  will be rejected. The corresponding error will be returned.
+- If it throws or returns an =HttpCode=, *access will be rejected*. The
+  corresponding code will be returned.
+- If it throws or returns =DontRespond=, *access will be rejected*.
+  Nothing will be returned.
+- If another error is thrown, *access will be rejected* and a 500 error
+  will be returned.
+- If it resolves, *access will be granted*. The result will be passed as
+  a third argument to the endpoint function.
 
-This function does all what the =preperator= function does /and/ the
-authentication check.
+The function can be synchronous or =async=.
 
-*** Bearer Auth with =prepauthTokenJWT=
+These access functions add additional response types to the API that
+you might want to document. To do that, you can specify a description
+and a response schema using the =accessFn= helper function.
 
-For this function, you need to install the package [[https://www.npmjs.com/package/jsonwebtoken][jsonwebtoken]].
+The =rejectAccess= helper function throws an =HttpError= 403 with a
+generic error message.
+
+The =anybody= helper function will not throw and can be used if you want
+to allow anybody to access then endpoint.
+
+If you want to authenticate a user, you will first have to do the
+authentication based on the request. E.g. when using a JSON Web Token
+(JWT) to authenticate a user, you can use the =jwtAnd= helper
+function. It takes the JWT secret as parameter and returns a
+*validation function* that will parse the JWT from the =Authorization=
+header that uses the format =Bearer <jwt>=. The returned validation
+function accepts as parameters other validation functions that will
+receive the request as first parameter and the parsed JWT as second
+parameter. See the example below.
+
+You can of course implement your own authentication functions for
+parsing other authentication schemes.
 
 #+BEGIN_SRC js
-  const { prepauthTokenJWT } = require("@apparts/prep");
+  import { addCrud, anybody, rejectAccess, accessFn, jwtAnd as _jwtAnd } from "@apparts/model-api";
+  import { HttpError, httpErrorSchema } from "@apparts/prep";
 
-  // Create the user as described by the README of @apparts/model
-  // and import it here:
-  const { Users, User, NoUser } = require("../models/user");
+  const jwtAnd = _jwtAnd("<myjwtsecretkey>");
 
-  const WEBTOKENKEY = "...";
-
-  const myEndpoint = prepauthTokenJWT(WEBTOKENKEY)(
-    {
-      // options as with preparator
+  const isOfFriend = jwtAnd(accessFn({
+    // first parameter of fn: the request with the database and the
+    // parsed parameters as you would get from @apparts/prep
+    fn: async ({ dbs, params: { userid } }, jwt) => {
+      // I can only list comments from my friends
+      const [,User] = useUser(dbs);
+      const meUser = await new User().loadById(jwt.userid);
+      if(meUser.content.friends.indexOf(userId) === -1) {
+        // using the rejectAccess helper to throw generic 403
+        rejectAccess();
+      }
     },
-    async ({ /*body, params, query*/ }, jwtContent, response) => {
-      // notice the second parameter: the content of your JWT
-      return "ok";
-    }
-  );
+    description: "is of my friend",
+    // telling the documentation, what this function might throw.
+    returns: [rejectAccess.returns]
+  }));
+
+  const isMine = jwtAnd(accessFn({
+    fn: ({ params: { userid } }, jwt) => {
+      if(userid !== jwt.userid) {
+        // manually throw an HttpError
+        throw new HttpError(403, "You can only access your own resources");
+      }
+    },
+    description: "is mine",
+    // telling the documentation, what this function might throw.
+    returns: [httpErrorSchema(403, "You can only access your own resources")]
+  }));
+
+  app.get("/v/1/user/:userid/comment", prepare({
+    title: "Endpoint that gives access to all comments of a users friend",
+    hasAccess: isOfFriend
+    /* ...*/
+  }, async (req, res, jwtContent) => {
+    // ...
+  }));
+
+  app.get("/v/1/comment/:commentid", prepare({
+    title: "Endpoint that returns a comment by id. Anybody who has the id can retrieve it.",
+    hasAccess: anybody
+    /* ...*/
+  }, async (req, res, jwtContent) => {
+    // ...
+  }));
+
+
+  app.post("/v/1/user/:userid/comment", prepare({
+    title: "Endpoint to post comments. User can post comments under own user account only.",
+    hasAccess: isMine
+    /* ...*/
+  }, async (req, res, jwtContent) => {
+    // ...
+  }));
 #+END_SRC
 
-Requests that shall successfully be granted access must have the
-=Authorization= HTTP header with the content =Bearer <JWT>=.
+For convenience some helpers are defined that support combining
+multiple access decider functions:
 
-The JWT must have a field =action= with the value ="login"=. The webtoken
-key used on token generation must obviously match the one, that the
-server is given in the code example above.
-
-Endpoints that use =prepauthTokenJWT= can produce the following additional
-responses:
-
-- HTTP Status: 401, Body: ={ "error": "Unauthorized" }= :: The token is
-  not present or the token does not have the necessary =action= field.
-- HTTP Status: 401, Body: ={ "error": "Token invalid" }= :: The
-  JWT is not properly formated or can not be validated against the
-  webtoken key.
-
-When using Typescript you can add a type to the =jwtContent= like this:
 #+BEGIN_SRC js
-  const myEndpoint = prepauthTokenJWT<MyJwtContent>(WEBTOKENKEY)(
-    { /*...*/ },
-    async (req, jwtContent /* of type MyJwtContent */, res) => {
-      return "ok";
-    }
-  );
+  const { addCrud, or, orS, anybody } = require("@apparts/model");
+
+  const isAdmin = accessFn({ fn: (request, jwt) => /* ... */ })
+  const isUser = accessFn({ fn: (request, jwt) => /* ... */ })
+  const canListUsers = (ps) => accessFn({ fn: (request, jwt) => /* ... */ });
+
+  app.get("/v/1/user/", prepare({
+    hasAccess: { hasAccess: andJwt(orS(isAdmin, canListUsers)) },
+    /* ...*/
+  }, async (req, res, jwtContent) => { /* ... */ }));
+    // ...
+  }));
+
+  app.post("/v/1/user/", prepare({
+    hasAccess: { hasAccess: andJwt(isUser) },
+    /* ...*/
+  }, async (req, res, jwtContent) => { /* ... */ }));
+
+  app.put("/v/1/user/", prepare({
+    hasAccess: { hasAccess: andJwt(or(isUser, isAdmin)) },
+    /* ...*/
+  }, async (req, res, jwtContent) => { /* ... */ }));
+#+END_SRC
+
+The helper functions are:
+
+#+BEGIN_SRC js
+  // check all conditions in parallel
+  const and = (...fs) => async (...params) => Promise<void>
+  const or = (...fs) => async (...params) => Promise<void>
+
+  // check all conditions in sequence
+  const andS = (...fs) => async (...params) => Promise<void>
+  const orS = (...fs) => async (...params) => Promise<void>
+
+  // anybody
+  const anybody = () => Promise.resolve();
+
+  // nobody
+  const rejectAccess = () => { throw new HttpError(403, "You don't have the rights to retrieve this.") }
+
+  // define an access function with a description and the possible http
+  // responses for documentation purposes
+  const accessFn = (params: {
+    fn: FnType<Params>;
+    description?: string;
+    returns?: ReturnsArray;
+  }) => FnType<Params>;
+
+  // For checking a JWT and then checking conditions
+  const jwtAnd = (webtokenkey: string) => (...fs) => async (...params) => Promise<void>;
 #+END_SRC
 
 * Generate API documentation
