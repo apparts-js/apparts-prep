@@ -273,8 +273,8 @@ be granted.
 
 The return behavior of the function defines if access is granted or
 not:
-- If it throws or returns an =HttpError= (from [[https://github.com/apparts-js/apparts-prep][@apparts/prep]]), access
-  will be rejected. The corresponding error will be returned.
+- If it throws or returns an =HttpError= (from [[https://github.com/apparts-js/apparts-prep][@apparts/prep]]), *access
+  will be rejected*. The corresponding error will be returned.
 - If it throws or returns an =HttpCode=, *access will be rejected*. The
   corresponding code will be returned.
 - If it throws or returns =DontRespond=, *access will be rejected*.
