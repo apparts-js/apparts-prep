@@ -86,33 +86,6 @@ export const prepare = <
     res.status(200);
     // iterate over the fields specified in the API's assertions
 
-    let accessResult: AuthType;
-    try {
-      accessResult = await options.hasAccess(req);
-      switch (detectTypeOfData(accessResult)) {
-        case DataType.HttpError:
-          catchError(
-            req,
-            res,
-            accessResult,
-            options.logError,
-            options.logResponse
-          );
-          return;
-        case DataType.HttpCode:
-          sendHttpCode(
-            accessResult as HttpCode<any, any>,
-            req,
-            res,
-            options.logResponse
-          );
-          return;
-      }
-    } catch (err) {
-      catchError(req, res, err, options.logError, options.logResponse);
-      return;
-    }
-
     if (options.strap) {
       for (const fieldName in fields) {
         for (const key in req[fieldName]) {
@@ -157,12 +130,28 @@ export const prepare = <
         return;
       }
     }
+
     try {
+      const accessResult = await options.hasAccess(req);
+      switch (detectTypeOfData(accessResult)) {
+        case DataType.HttpError:
+          throw accessResult;
+        case DataType.HttpCode:
+          sendHttpCode(
+            accessResult as HttpCode<any, any>,
+            req,
+            res,
+            options.logResponse
+          );
+          return;
+        case DataType.DontRespond:
+          return;
+      }
+
       const data = await next(req, res, accessResult);
       switch (detectTypeOfData(data)) {
         case DataType.HttpError:
-          catchError(req, res, data, options.logError, options.logResponse);
-          return;
+          throw data;
         case DataType.HttpCode:
           sendHttpCode(data, req, res, options.logResponse);
           return;
