@@ -273,8 +273,8 @@ be granted.
 
 The return behavior of the function defines if access is granted or
 not:
-- If it throws or returns an =HttpError= (from [[https://github.com/apparts-js/apparts-prep][@apparts/prep]]), *access
-  will be rejected*. The corresponding error will be returned.
+- If it throws or returns an =HttpError=, *access will be rejected*. The
+  corresponding error will be returned.
 - If it throws or returns an =HttpCode=, *access will be rejected*. The
   corresponding code will be returned.
 - If it throws or returns =DontRespond=, *access will be rejected*.
@@ -290,32 +290,35 @@ These access functions add additional response types to the API that
 you might want to document. To do that, you can specify a description
 and a response schema using the =accessFn= helper function.
 
-The =rejectAccess= helper function throws an =HttpError= 403 with a
-generic error message.
+#+BEGIN_SRC js
+  import { HttpError, httpErrorSchema, accessFn } from "@apparts/prep";
+
+  
+const isMine = accessFn({
+  fn: ({ params: { userid } }, jwt) => {
+    if(userid !== jwt.userid) {
+      // manually throw an HttpError
+      throw new HttpError(403, "You can only access your own resources");
+    }
+  },
+  description: "is mine",
+  // telling the documentation, what this function might throw.
+  returns: [httpErrorSchema(403, "You can only access your own resources")]
+});
+#+END_SRC
 
 The =anybody= helper function will not throw and can be used if you want
 to allow anybody to access then endpoint.
 
-If you want to authenticate a user, you will first have to do the
-authentication based on the request. E.g. when using a JSON Web Token
-(JWT) to authenticate a user, you can use the =jwtAnd= helper
-function. It takes the JWT secret as parameter and returns a
-*validation function* that will parse the JWT from the =Authorization=
-header that uses the format =Bearer <jwt>=. The returned validation
-function accepts as parameters other validation functions that will
-receive the request as first parameter and the parsed JWT as second
-parameter. See the example below.
-
-You can of course implement your own authentication functions for
-parsing other authentication schemes.
+The =rejectAccess= helper function throws an =HttpError= 403 with a
+generic error message. It can be used directly as an access function
+(which has limited use) or as a helper when building your own access
+functions to produce a consisted generic error message:
 
 #+BEGIN_SRC js
-  import { addCrud, anybody, rejectAccess, accessFn, jwtAnd as _jwtAnd } from "@apparts/model-api";
-  import { HttpError, httpErrorSchema } from "@apparts/prep";
+  import { anybody, rejectAccess, accessFn, jwtAnd as _jwtAnd } from "@apparts/prep";
 
-  const jwtAnd = _jwtAnd("<myjwtsecretkey>");
-
-  const isOfFriend = jwtAnd(accessFn({
+  const isOfFriend = accessFn({
     // first parameter of fn: the request with the database and the
     // parsed parameters as you would get from @apparts/prep
     fn: async ({ dbs, params: { userid } }, jwt) => {
@@ -330,9 +333,59 @@ parsing other authentication schemes.
     description: "is of my friend",
     // telling the documentation, what this function might throw.
     returns: [rejectAccess.returns]
-  }));
+  });
+#+END_SRC
 
-  const isMine = jwtAnd(accessFn({
+If you want to authenticate a user, you will first have to do the
+authentication based on the request.
+
+The access function receives all the request parameters as it's first
+parameter. It includes the headers and can use these to authenticate
+the request.
+
+E.g. when using a JSON Web Token (JWT) to authenticate a user, you can
+use the =jwtAnd= helper function. It takes the JWT secret as parameter
+and returns a *validation function* that will parse the JWT from the
+=Authorization= header that uses the format =Bearer <jwt>=. The returned
+validation function accepts as parameters other validation functions
+that will receive the request as first parameter and the parsed JWT as
+second parameter. See the example below.
+
+You can of course implement your own authentication functions for
+parsing other authentication schemes.
+
+Here an example, putting it together:
+
+#+BEGIN_SRC js
+  import {
+    HttpError,
+    httpErrorSchema,
+    anybody,
+    rejectAccess,
+    accessFn,
+    jwtAnd as _jwtAnd
+  } from "@apparts/prep";
+
+  const jwtAnd = _jwtAnd("<myjwtsecretkey>");
+
+  const isOfFriend = accessFn({
+    // first parameter of fn: the request with the database and the
+    // parsed parameters as you get in the endpoint handler
+    fn: async ({ dbs, params: { userid } }, jwt) => {
+      // I can only list comments from my friends
+      const [,User] = useUser(dbs);
+      const meUser = await new User().loadById(jwt.userid);
+      if(meUser.content.friends.indexOf(userId) === -1) {
+        // using the rejectAccess helper to throw generic 403
+        rejectAccess();
+      }
+    },
+    description: "is of my friend",
+    // telling the documentation, what this function might throw.
+    returns: [rejectAccess.returns]
+  });
+
+  const isMine = accessFn({
     fn: ({ params: { userid } }, jwt) => {
       if(userid !== jwt.userid) {
         // manually throw an HttpError
@@ -342,32 +395,25 @@ parsing other authentication schemes.
     description: "is mine",
     // telling the documentation, what this function might throw.
     returns: [httpErrorSchema(403, "You can only access your own resources")]
-  }));
+  });
 
   app.get("/v/1/user/:userid/comment", prepare({
     title: "Endpoint that gives access to all comments of a users friend",
-    hasAccess: isOfFriend
+    hasAccess: jwtAnd(isOfFriend)
     /* ...*/
-  }, async (req, res, jwtContent) => {
-    // ...
-  }));
+  }, async (req, res, jwtContent) => { /* ... */ }));
 
   app.get("/v/1/comment/:commentid", prepare({
-    title: "Endpoint that returns a comment by id. Anybody who has the id can retrieve it.",
-    hasAccess: anybody
+    title: "Endpoint that returns a comment by id. Anybody who has the id and a valid JWT can retrieve it.",
+    hasAccess: jwtAnd(anybody)
     /* ...*/
-  }, async (req, res, jwtContent) => {
-    // ...
-  }));
-
+  }, async (req, res, jwtContent) => { /* ... */ }));
 
   app.post("/v/1/user/:userid/comment", prepare({
     title: "Endpoint to post comments. User can post comments under own user account only.",
-    hasAccess: isMine
+    hasAccess: jwtAnd(isMine)
     /* ...*/
-  }, async (req, res, jwtContent) => {
-    // ...
-  }));
+  }, async (req, res, jwtContent) => { /* ... */ }));
 #+END_SRC
 
 For convenience some helpers are defined that support combining
@@ -378,14 +424,7 @@ multiple access decider functions:
 
   const isAdmin = accessFn({ fn: (request, jwt) => /* ... */ })
   const isUser = accessFn({ fn: (request, jwt) => /* ... */ })
-  const canListUsers = (ps) => accessFn({ fn: (request, jwt) => /* ... */ });
-
-  app.get("/v/1/user/", prepare({
-    hasAccess: { hasAccess: andJwt(orS(isAdmin, canListUsers)) },
-    /* ...*/
-  }, async (req, res, jwtContent) => { /* ... */ }));
-    // ...
-  }));
+  const canListComments = (ps) => accessFn({ fn: (request, jwt) => /* ... */ });
 
   app.post("/v/1/user/", prepare({
     hasAccess: { hasAccess: andJwt(isUser) },
@@ -396,6 +435,12 @@ multiple access decider functions:
     hasAccess: { hasAccess: andJwt(or(isUser, isAdmin)) },
     /* ...*/
   }, async (req, res, jwtContent) => { /* ... */ }));
+
+  app.get("/v/1/user/:id/comments", prepare({
+    hasAccess: { hasAccess: andJwt(orS(isAdmin, and(isUser, canListComments))) },
+    /* ...*/
+  }, async (req, res, jwtContent) => { /* ... */ }));
+
 #+END_SRC
 
 The helper functions are:
