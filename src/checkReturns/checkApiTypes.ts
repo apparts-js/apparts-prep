@@ -50,14 +50,37 @@ const getTypeErrorMessage = (type: Type) => {
   return null;
 };
 
-export const useChecks = (
-  funktionContainer: Record<
-    string,
-    {
-      options: { returns: Type[] };
+type TestableFunction = {
+  options: { returns: Type[] };
+};
+
+type UseChecksReturnType = {
+  checkType: (
+    response: {
+      body: unknown;
+      statusCode: number;
+    },
+    functionName: string,
+    options?: {
+      explainError?: boolean;
     }
-  >
-) => {
+  ) => boolean;
+  allChecked: (functionName: string) => boolean;
+};
+
+export function useChecks(
+  funktionContainer: Record<string, TestableFunction>
+): UseChecksReturnType;
+export function useChecks<T>(
+  funktionContainer: Record<string, T>,
+  prepareFunction: (t: T) => TestableFunction
+): UseChecksReturnType;
+export function useChecks<T>(
+  funktionContainer: Record<string, T>,
+  prepareFunction?: (t: T) => TestableFunction
+) {
+  prepareFunction ||= (t) => t as unknown as TestableFunction;
+
   const checked: Record<string, boolean[]> = {};
 
   if (!funktionContainer || Object.keys(funktionContainer).length === 0) {
@@ -70,7 +93,8 @@ export const useChecks = (
         `Function ### "${functionName}" ### could not be found, maybe you misspelled it?`
       );
     }
-    const types = funktionContainer[functionName].options.returns;
+    const types = prepareFunction(funktionContainer[functionName]).options
+      .returns;
 
     if (
       checked[functionName] &&
@@ -109,7 +133,8 @@ export const useChecks = (
         `Function ### "${functionName}" ### could not be found, maybe you misspelled it?`
       );
     }
-    const types = funktionContainer[functionName].options.returns;
+    const types = prepareFunction(funktionContainer[functionName]).options
+      .returns;
     if (!types) {
       console.log("No types found for ###", functionName, "###");
       return false;
@@ -195,4 +220,4 @@ export const useChecks = (
     );
   };
   return { checkType, allChecked };
-};
+}
