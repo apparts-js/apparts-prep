@@ -2,8 +2,8 @@ import { HttpError, httpErrorSchema, ReturnsArray, validJwt } from "../";
 import { Request } from "express";
 import { Schema } from "@apparts/types";
 
-type FnType<Params extends unknown[]> = {
-  (...params: Params): Promise<void> | void;
+type FnType<Params extends unknown[], ReturnType> = {
+  (...params: Params): Promise<ReturnType> | ReturnType;
   description?: string;
   returns?: ReturnsArray;
 };
@@ -15,7 +15,9 @@ const unique = (vals: Schema<any, any>[]) => {
 };
 
 // check all conditions in parallel
-export const and = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
+export const and = <Params extends unknown[]>(
+  ...fs: FnType<Params, void>[]
+) => {
   const fn = async (...param: Params) => {
     await Promise.all(fs.map((f) => f(...param)));
   };
@@ -24,7 +26,7 @@ export const and = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
   return fn;
 };
 
-export const or = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
+export const or = <Params extends unknown[]>(...fs: FnType<Params, void>[]) => {
   const fn = async (...params: Params) => {
     let counter = fs.length;
     return await new Promise<void>((res, rej) =>
@@ -47,7 +49,9 @@ export const or = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
 };
 
 // check all conditions in sequence
-export const andS = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
+export const andS = <Params extends unknown[]>(
+  ...fs: FnType<Params, void>[]
+) => {
   const fn = async (...params: Params) => {
     for (const f of fs) {
       await f(...params);
@@ -58,7 +62,9 @@ export const andS = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
   return fn;
 };
 
-export const orS = <Params extends unknown[]>(...fs: FnType<Params>[]) => {
+export const orS = <Params extends unknown[]>(
+  ...fs: FnType<Params, void>[]
+) => {
   const fn = async (...params: Params) => {
     const last = fs.pop();
     for (const f of fs) {
@@ -89,7 +95,20 @@ rejectAccess.returns = [
 ];
 
 export const accessFn = <Params extends unknown[]>(params: {
-  fn: FnType<Params>;
+  fn: FnType<Params, void>;
+  description?: string;
+  returns?: ReturnsArray;
+}) => {
+  params.fn.description = params.description;
+  params.fn.returns = params.returns;
+  return params.fn;
+};
+
+export const returningAccessFn = <
+  Params extends unknown[],
+  ReturnType
+>(params: {
+  fn: FnType<Params, ReturnType>;
   description?: string;
   returns?: ReturnsArray;
 }) => {
@@ -103,7 +122,7 @@ export const jwtAnd = <TokenContent>(webtokenkey: string) => {
     throw new Error("jwtAnd expects a webtokenkey as parameter");
   }
 
-  return (...fs: FnType<[Request, TokenContent]>[]) => {
+  return (...fs: FnType<[Request, TokenContent], void>[]) => {
     if (fs.length !== 0 && typeof fs[0] !== "function") {
       throw new Error(
         "jwtAnd returns a validation function that expects 0 or more access functions as parameter. But got non-function."
