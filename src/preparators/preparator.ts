@@ -132,7 +132,7 @@ export const prepare = <
     }
 
     try {
-      const accessResult = await options.hasAccess(req);
+      const accessResult = await options.hasAccess(req, res);
       switch (detectTypeOfData(accessResult)) {
         case DataType.HttpError:
           throw accessResult;

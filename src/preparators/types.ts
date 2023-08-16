@@ -28,7 +28,7 @@ export type LogResponseFn = (
 ) => void;
 
 export type CheckAccessFn<AuthType extends AuthResponse> = {
-  (req: ExpressRequest): Promise<AuthType>;
+  (req: ExpressRequest, res: ExpressResponse): Promise<AuthType>;
   description?: string;
   returns?: ReturnsArray;
 };
