@@ -1,5 +1,5 @@
 import { HttpError, httpErrorSchema, ReturnsArray, validJwt } from "../";
-import { Request } from "express";
+import { Request, Response } from "express";
 import { Schema } from "@apparts/types";
 
 type FnType<Params extends unknown[], ReturnType> = {
@@ -115,6 +115,31 @@ export const returningAccessFn = <
   params.fn.description = params.description;
   params.fn.returns = params.returns;
   return params.fn;
+};
+
+export const prepareAnd = <PrepareReturn>(
+  prepare: FnType<[Request, Response], PrepareReturn>
+) => {
+  return (...fs: FnType<[Request, PrepareReturn], void>[]) => {
+    if (fs.length !== 0 && typeof fs[0] !== "function") {
+      throw new Error(
+        "jwtAnd returns a validation function that expects 0 or more access functions as parameter. But got non-function."
+      );
+    }
+    const andFns = and(...fs);
+    const fn = async (req: Request, res: Response) => {
+      const token = await prepare(req, res);
+      await andFns(req, token);
+      return token;
+    };
+    fn.returns = unique(
+      [...prepare.returns, ...fs.map((f) => f.returns || [])].flat()
+    );
+    fn.description =
+      prepare.description +
+      `\n\n${fs.map((f) => f.description || "").join(" and ")}`;
+    return fn;
+  };
 };
 
 export const jwtAnd = <TokenContent>(webtokenkey: string) => {
