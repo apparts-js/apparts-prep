@@ -135,9 +135,10 @@ export const prepareAnd = <PrepareReturn>(
     fn.returns = unique(
       [...(prepare.returns || []), ...fs.map((f) => f.returns || [])].flat()
     );
-    fn.description =
-      prepare.description +
-      `\n\n${fs.map((f) => f.description || "").join(" and ")}`;
+    fn.description = [
+      prepare.description,
+      ...fs.map((f) => f.description || ""),
+    ].join(" and ");
     return fn;
   };
 };
@@ -163,9 +164,10 @@ export const jwtAnd = <TokenContent>(webtokenkey: string) => {
     fn.returns = unique(
       [...jwtFn.returns, ...fs.map((f) => f.returns || [])].flat()
     );
-    fn.description =
-      jwtFn.description +
-      `\n\n${fs.map((f) => f.description || "").join(" and ")}`;
+    fn.description = [
+      jwtFn.description,
+      ...fs.map((f) => f.description || ""),
+    ].join(" and ");
     return fn;
   };
 };
