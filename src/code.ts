@@ -41,3 +41,17 @@ export const httpCodeSchema = <
 export class DontRespond {
   public readonly type = "DontRespond";
 }
+
+export const httpDontRespondSchema = () => {
+  const type = "DontRespond" as const;
+  type A = Readonly<typeof type>;
+
+  return new Obj<
+    Required,
+    {
+      type: Value<Required, A>;
+    }
+  >({
+    type: new Value(type),
+  });
+};

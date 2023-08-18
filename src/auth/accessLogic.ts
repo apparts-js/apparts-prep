@@ -133,7 +133,7 @@ export const prepareAnd = <PrepareReturn>(
       return token;
     };
     fn.returns = unique(
-      [...prepare.returns, ...fs.map((f) => f.returns || [])].flat()
+      [...(prepare.returns || []), ...fs.map((f) => f.returns || [])].flat()
     );
     fn.description =
       prepare.description +

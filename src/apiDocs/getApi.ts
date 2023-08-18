@@ -22,7 +22,7 @@ const filterSections = (
       filteredSections: subsections,
       indexReplacements: subsectionReplacements,
     } = filterSections(
-      section.subsections,
+      section.subsections || [],
       filterResult ? () => true : sectionFilter,
       counter + ".",
       filteredSections.length + "."

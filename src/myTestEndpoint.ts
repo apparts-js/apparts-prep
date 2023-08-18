@@ -84,6 +84,7 @@ const myEndpoint = prepare(
         kabaz: false,
       };
       if (filter !== "kabazplz") {
+        // @ts-expect-error test type
         delete resp.kabaz;
       }
       return resp;
@@ -178,6 +179,7 @@ const myTypelessEndpoint = prepare(
     receives: {},
     returns: [],
   },
+  // @ts-expect-error test type
   async () => {
     return "ok" as const;
   }

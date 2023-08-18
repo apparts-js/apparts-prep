@@ -276,7 +276,9 @@ Error should be:
 ❌ Type missmatch: Value is "whut?" but should be of type '{
   "type": "object",
   "keys": {
-    "error": {},
+    "error": {
+      "value": "Name too long"
+    },
     "description": {
       "type": "string",
       "optional": true
@@ -311,7 +313,9 @@ Error should be:
 ❌ Type missmatch: Value is "whut?" but should be of type '{
   "type": "object",
   "keys": {
-    "error": {},
+    "error": {
+      "value": "Fieldmissmatch"
+    },
     "description": {
       "type": "string",
       "optional": true

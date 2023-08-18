@@ -1,4 +1,4 @@
-import { ObjType, OneOfType, Type } from "@apparts/types";
+import { ObjType, OneOfType } from "@apparts/types";
 
 const rest = {
   description: { type: "string" as const, optional: true as const },

@@ -2,6 +2,8 @@ import {
   Type,
   checkType as recursiveCheck,
   explainCheck,
+  ObjType,
+  ValueType,
 } from "@apparts/types";
 
 export const isNotFieldmissmatch = (type: Type) => {
@@ -77,9 +79,10 @@ export function useChecks<T>(
 ): UseChecksReturnType;
 export function useChecks<T>(
   funktionContainer: Record<string, T>,
-  prepareFunction?: (t: T) => TestableFunction
+  _prepareFunction?: (t: T) => TestableFunction
 ) {
-  prepareFunction ||= (t) => t as unknown as TestableFunction;
+  const prepareFunction =
+    _prepareFunction || ((t) => t as unknown as TestableFunction);
 
   const checked: Record<string, boolean[]> = {};
 
@@ -139,7 +142,7 @@ export function useChecks<T>(
       console.log("No types found for ###", functionName, "###");
       return false;
     }
-    const errors = [];
+    const errors: [unknown, Type, number, number, boolean][] = [];
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
       const errorMessage = getTypeErrorMessage(type);
@@ -183,7 +186,7 @@ export function useChecks<T>(
               type: "object",
               keys: {
                 error: {
-                  value: type.error,
+                  value: ((type as ObjType).keys.error as ValueType).value,
                 },
                 description: {
                   type: "string",

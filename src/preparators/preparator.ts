@@ -177,7 +177,9 @@ export const prepare = <
       ...(options.hasAccess.returns || []).map((r) => r.getType()),
     ],
   };
+  // @ts-expect-error Ignore type
   delete f.options.receives;
+  // @ts-expect-error Ignore type
   delete f.options.hasAccess;
   return f;
 };
