@@ -14,7 +14,7 @@ export const validJwt = (webtokenkey: string) => {
       const jwt = verifyJWT(token, webtokenkey);
       return jwt;
     } catch (err) {
-      return new HttpError(401, "Unauthorized");
+      return new HttpError(401, "Token invalid");
     }
   };
   fn.description = "Bearer jwt";
