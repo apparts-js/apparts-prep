@@ -18,6 +18,9 @@ export const validJwt = <TokenContent>(webtokenkey: string) => {
     }
   };
   fn.description = "Bearer jwt";
-  fn.returns = [httpErrorSchema(401, "Unauthorized")];
+  fn.returns = [
+    httpErrorSchema(401, "Unauthorized"),
+    httpErrorSchema(401, "Token invalid"),
+  ];
   return fn;
 };
