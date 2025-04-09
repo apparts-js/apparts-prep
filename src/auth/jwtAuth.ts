@@ -3,7 +3,7 @@ import { bearerAuth } from "./authorizationHeader";
 import { Request } from "express";
 import { verify as verifyJWT } from "jsonwebtoken";
 
-export const validJwt = (webtokenkey: string) => {
+export const validJwt = <TokenContent>(webtokenkey: string) => {
   const fn = async (req: Request) => {
     const token = bearerAuth(req);
     if (!token) {
@@ -12,7 +12,7 @@ export const validJwt = (webtokenkey: string) => {
 
     try {
       const jwt = verifyJWT(token, webtokenkey);
-      return jwt;
+      return jwt as TokenContent;
     } catch (err) {
       return new HttpError(401, "Token invalid");
     }

@@ -155,9 +155,12 @@ export const jwtAnd = <TokenContent>(webtokenkey: string) => {
       );
     }
     const andFns = and(...fs);
-    const jwtFn = validJwt(webtokenkey);
+    const jwtFn = validJwt<TokenContent>(webtokenkey);
     const fn = async (req: Request) => {
-      const token = (await jwtFn(req)) as TokenContent;
+      const token = await jwtFn(req);
+      if (token instanceof HttpError) {
+        return token;
+      }
       await andFns(req, token);
       return token;
     };
