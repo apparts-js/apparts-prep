@@ -240,6 +240,19 @@ describe("getApi", () => {
                 },
               },
             },
+            {
+              keys: {
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+                error: {
+                  value: "Token invalid",
+                },
+              },
+              status: 401,
+              type: "object",
+            },
           ],
           title: "Endpoint with JWT Authentication",
           description: "You shall not pass, unless you have a JWT.",
@@ -453,6 +466,19 @@ console.log("Hollow orld");
                   type: "string",
                 },
               },
+            },
+            {
+              keys: {
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+                error: {
+                  value: "Token invalid",
+                },
+              },
+              status: 401,
+              type: "object",
             },
           ],
           title: "Endpoint with JWT Authentication",
@@ -696,6 +722,19 @@ console.log("Hollow orld");
                   type: "string",
                 },
               },
+            },
+            {
+              keys: {
+                description: {
+                  optional: true,
+                  type: "string",
+                },
+                error: {
+                  value: "Token invalid",
+                },
+              },
+              status: 401,
+              type: "object",
             },
           ],
           title: "Endpoint with JWT Authentication",

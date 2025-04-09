@@ -288,6 +288,13 @@ You shall not pass, unless you have a JWT.
       "description": ? <string>
     }
     ```
+  - Status: 401
+    ```
+    {
+      "error": "Token invalid",
+      "description": ? <string>
+    }
+    ```
 - **Usage:**
 ```js
 try {
@@ -296,6 +303,9 @@ try {
     .data({  })
     .auth(user)
     .on({ status: 400, error: "undefined" }, () => {
+       /* handle error */
+    })
+    .on({ status: 401, error: "undefined" }, () => {
        /* handle error */
     })
     .on({ status: 401, error: "undefined" }, () => {

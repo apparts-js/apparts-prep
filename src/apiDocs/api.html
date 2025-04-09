@@ -364,9 +364,12 @@ Endpoint with JWT Authentication</h3>
         <li>Status: 401
         <code class="block">{<br/>&nbsp;&nbsp;"error": "Unauthorized",<br/>&nbsp;&nbsp;"description": ? <span class="type">&lt;string&gt;</span><br/>}</code></li>
         
+        <li>Status: 401
+        <code class="block">{<br/>&nbsp;&nbsp;"error": "Token invalid",<br/>&nbsp;&nbsp;"description": ? <span class="type">&lt;string&gt;</span><br/>}</code></li>
+        
      </ul>
      <span class="usage">Usage:</span> <br><br>
-     <code class="block">try {<br/>&nbsp;&nbsp;const response = await put("withjwt", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.auth(user)<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
+     <code class="block">try {<br/>&nbsp;&nbsp;const response = await put("withjwt", [&nbsp;&nbsp;])<br/>&nbsp;&nbsp;&nbsp;&nbsp;.query({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.data({&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.auth(user)<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 400, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;})<br/>&nbsp;&nbsp;&nbsp;&nbsp;.on({ status: 401, error: "undefined" }, () => {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* handle error */<br/>&nbsp;&nbsp;&nbsp;&nbsp;});<br/>} catch (e) {<br/>&nbsp;&nbsp;// If e is not false, then no error-catcher caught the error and<br/>&nbsp;&nbsp;// you might want to take care of it<br/>&nbsp;&nbsp;e && alert(e);<br/>}</code>
   </div>
 </section><section id="get_/v/1/error">
    <h3><span class="version">v1</span>

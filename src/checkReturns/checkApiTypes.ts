@@ -23,6 +23,23 @@ export const isNotFieldmissmatch = (type: Type) => {
   );
 };
 
+export const isNotTokenInvalid = (type: Type) => {
+  return !(
+    "keys" in type &&
+    "code" in type.keys &&
+    "value" in type.keys.code &&
+    type.keys.code.value === 401 &&
+    "type" in type.keys &&
+    "value" in type.keys.type &&
+    type.keys.type.value === "HttpError" &&
+    "message" in type.keys &&
+    "keys" in type.keys.message &&
+    "error" in type.keys.message.keys &&
+    "value" in type.keys.message.keys.error &&
+    type.keys.message.keys.error.value === "Token invalid"
+  );
+};
+
 const getTypeStatusCode = (type: Type) => {
   if (
     "keys" in type &&
@@ -102,7 +119,9 @@ export function useChecks<T>(
     if (
       checked[functionName] &&
       checked[functionName]
-        .filter((_, i) => isNotFieldmissmatch(types[i]))
+        .filter(
+          (_, i) => isNotFieldmissmatch(types[i]) && isNotTokenInvalid(types[i])
+        )
         .reduce((a, b) => a && b, true)
     ) {
       return true;
@@ -112,7 +131,7 @@ export function useChecks<T>(
         JSON.stringify(
           types
             .filter((_, i) => !checked[functionName]?.[i])
-            .filter((t) => isNotFieldmissmatch(t))
+            .filter((t) => isNotFieldmissmatch(t) && isNotTokenInvalid(t))
             .map((t) => {
               const e = getTypeErrorMessage(t);
               return e ? e : t;
