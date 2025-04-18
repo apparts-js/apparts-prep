@@ -63,6 +63,7 @@ const directType = {
       alternatives: [
         { value: "id" as const },
         { value: "uuidv4" as const },
+        { value: "uuid" as const },
         { value: "/" as const },
         { value: "int" as const },
         { value: "float" as const },
@@ -71,6 +72,7 @@ const directType = {
         { value: "boolean" as const },
         { value: "string" as const },
         { value: "email" as const },
+        { value: "phoneISD" as const },
         { value: "null" as const },
       ],
     },
