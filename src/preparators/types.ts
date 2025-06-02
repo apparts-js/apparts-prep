@@ -19,7 +19,8 @@ export type AuthResponse = unknown;
 export type LogErrorFn = (
   msg: string,
   req: ExpressRequest,
-  res: ExpressResponse
+  res: ExpressResponse,
+  obj: Record<string, any>
 ) => void;
 export type LogResponseFn = (
   msg: string,

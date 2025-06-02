@@ -241,7 +241,7 @@ const catchError = (
     errorMsg += errorObj + "\n" + e;
   }
   if (logError) {
-    logError(errorMsg, req, res);
+    logError(errorMsg, req, res, errorObj);
   } else {
     console.log(errorMsg);
   }
