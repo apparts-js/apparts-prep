@@ -28,43 +28,47 @@ const formatReceives = (receives: {
 });
 
 export const getRoutes = (app: Application) => {
-  return ((app._router || {}).stack || [])
+  const appRoutes = ((app._router || {}).stack || []) as any[];
+
+  return appRoutes
+    .filter((route) => route.route && route.route.path)
     .map((route) => {
-      if (route.route && route.route.path) {
-        const {
-          route: { path, stack = [] },
-        } = route;
-        const { method, handle } = stack[stack.length - 1];
-        const {
-          returns = [],
-          title = "",
-          description,
-          ...options
-        } = handle.options || {};
-        return {
-          method,
-          path,
-          assertions: formatReceives(handle.assertions),
-          returns: returns,
-          title,
-          description,
-          options: {
-            ...options,
-            section: route.route.section,
-          },
-          route: route.route,
-        };
-      }
-      return false;
+      const {
+        route: { path, stack = [] },
+      } = route;
+      const { method, handle } = stack[stack.length - 1];
+      const {
+        returns = [],
+        title = "",
+        description,
+        ...options
+      } = handle.options || {};
+      return {
+        method: method as string,
+        path: path as string,
+        assertions: formatReceives(handle.assertions),
+        returns: returns,
+        title: title as string,
+        description: description as string,
+        options: {
+          ...(options as Record<string, any>),
+          section: route.route.section as string | undefined,
+        },
+        route: route.route,
+      };
     })
-    .filter((a) => !!a)
     .map((route) => {
       return {
         ...route,
-        returns: route.returns.map((type) => {
+        returns: (route.returns as Type[]).map((type) => {
           if (
-            type.keys?.type?.value === "HttpError" ||
-            type.keys?.type?.value === "HttpCode"
+            "keys" in type &&
+            "type" in type.keys &&
+            "value" in type.keys.type &&
+            "code" in type.keys &&
+            "value" in type.keys.code &&
+            (type.keys?.type?.value === "HttpError" ||
+              type.keys?.type?.value === "HttpCode")
           ) {
             return {
               status: type.keys.code.value,

@@ -79,10 +79,10 @@ export const getApi = (app: Application, options: ApiDocOptions) => {
     );
   }
 
-  for (const key in sectionMap) {
-    const newId = sectionMap[key];
+  const routesWithSection = routes.map((route) => {
+    for (const key in sectionMap) {
+      const newId = sectionMap[key];
 
-    routes = routes.map((route) => {
       if (route.options?.section && route.options.section === key) {
         return {
           ...route,
@@ -92,8 +92,8 @@ export const getApi = (app: Application, options: ApiDocOptions) => {
           },
         };
       }
-      return route;
-    });
-  }
-  return { routes, sections };
+    }
+    return route;
+  });
+  return { routes: routesWithSection, sections };
 };
