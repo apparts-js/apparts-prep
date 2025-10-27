@@ -46,7 +46,6 @@ export type OptionsType<
   receives: AssertionsType<BodyType, ParamsType, QueryType>;
   returns: ReturnTypes;
   auth?: string;
-  strap?: boolean;
   logError?: LogErrorFn;
   logResponse?: LogResponseFn;
   hasAccess: CheckAccessFn<AuthType>;

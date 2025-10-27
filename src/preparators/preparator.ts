@@ -1,6 +1,7 @@
 import { v1 as uuidv1 } from "uuid";
+import * as types from "@apparts/types";
 import {
-  types,
+  types as typesTypes,
   checkType as recursiveCheck,
   explainCheck,
   Obj,
@@ -55,6 +56,11 @@ export const prepare = <
     params: paramsSchema.getModelType(),
     query: querySchema.getModelType(),
   };
+  const fieldsSchema = {
+    body: bodySchema,
+    params: paramsSchema,
+    query: querySchema,
+  };
 
   const assError = explainCheck(fields, assertionType);
   if (assError || Object.keys(restAssertions).length > 0) {
@@ -86,12 +92,10 @@ export const prepare = <
     res.status(200);
     // iterate over the fields specified in the API's assertions
 
-    if (options.strap) {
-      for (const fieldName in fields) {
-        for (const key in req[fieldName]) {
-          if (!(key in fields[fieldName])) {
-            delete req[fieldName][key];
-          }
+    for (const fieldName in fields) {
+      for (const key in req[fieldName]) {
+        if (!(key in fields[fieldName])) {
+          delete req[fieldName][key];
         }
       }
     }
@@ -101,33 +105,27 @@ export const prepare = <
       if (!(fieldName in req)) {
         req[fieldName] = {};
       }
-      let valid;
+      let checkResult: ReturnType<typeof check>;
       try {
-        valid = check(fields[fieldName], req[fieldName], fieldName);
+        checkResult = check(fieldsSchema[fieldName], req[fieldName], fieldName);
       } catch (e) /* istanbul ignore next */ {
         catchError(req, res, e, options.logError, options.logResponse);
         return;
       }
-      if (valid !== true) {
-        const r = {};
-        r[fieldName] = valid;
-
+      if (!checkResult.success) {
         send(
           req,
           res,
           JSON.stringify({
             error: "Fieldmissmatch",
-            description:
-              Object.keys(valid)
-                .map((key) => valid[key] + ` for field "${key}"`)
-                .join(", ") +
-              " in " +
-              fieldName,
+            description: checkResult.error,
           }),
           options.logResponse,
           400
         );
         return;
+      } else {
+        req[fieldName] = checkResult.data;
       }
     }
 
@@ -260,80 +258,49 @@ const catchError = (
 
 /**
  * Performs the type-assertion-check and applies default values
- *
- * @param {Object} wanted
- * @param {Object} given
- * @param {string} field
- * @return {bool} 'true' if everything matched, Error Description if not
  */
-const check = (wanted, given, field) => {
-  /*
-   * TODO: Clean this mess up by using recursiveCheck on the whole
-   * object. Take a look at the branch feature/deep-defaults.
-   */
+const check = (
+  wanted: types.Obj<any, any>,
+  given: Record<string, unknown>,
+  field: string
+) => {
+  const wantedType = wanted.getModelType();
 
-  const keys = Object.keys(wanted);
+  const keys = Object.keys(wantedType);
   for (let i = 0; i < keys.length; i++) {
     const param = keys[i];
 
     const exists = param in given && given[param] !== undefined;
     if (!exists) {
-      if ("default" in wanted[param]) {
-        continue;
-      }
-      if (wanted[param]["optional"] !== true) {
-        const res = {};
-        res[param] = "missing " + wanted[param]["type"];
-        return res;
-      }
       continue;
     }
 
-    if (!convertIfNeeded(wanted, param, given, field)) {
-      const res = {};
-      res[param] = "expected " + wanted[param]["type"];
-      return res;
-    }
+    convertIfNeeded(wantedType, param, given, field);
   }
 
-  const newRequest = fillInDefaultsStrict(
-    {
-      type: "object",
-      keys: wanted,
-    },
-    given
-  );
+  const newRequest = types.fillInDefaultsStrictSchema(wanted, given);
 
-  for (let i = 0; i < keys.length; i++) {
-    const param = keys[i];
-    if (!(param in newRequest) && wanted[param].optional) {
-      continue;
-    }
-    given[param] = newRequest[param];
-
-    if (!recursiveCheck(given[param], wanted[param])) {
-      const res = {};
-      res[param] = "expected " + wanted[param]["type"];
-      return res;
-    }
+  const explainResult = types.explainSchemaCheck(newRequest, wanted);
+  if (explainResult !== false) {
+    const res = { success: false as const, error: explainResult };
+    return res;
   }
 
-  return true;
+  return { success: true as const, data: newRequest };
 };
 
 const convertIfNeeded = (wanted, param, given, field) => {
   if (
-    types[wanted[param]["type"]] &&
-    types[wanted[param]["type"]].conv &&
+    typesTypes[wanted[param]["type"]] &&
+    typesTypes[wanted[param]["type"]].conv &&
     field !== "body"
   ) {
     try {
-      given[param] = types[wanted[param]["type"]].conv(given[param]);
-    } catch (e) {
-      return false;
+      given[param] = typesTypes[wanted[param]["type"]].conv(given[param]);
+    } catch {
+      // Ignore conversion errors, they will be caught by the type-check later
     }
   }
-  return true;
 };
 
 const constructErrorObj = (req, error) => {

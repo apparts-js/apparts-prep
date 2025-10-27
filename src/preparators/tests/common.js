@@ -23,7 +23,7 @@ const expectMiss = async (path, body, paramType, field, fType) => {
     .expect("Content-Type", "application/json; charset=utf-8");
   expect(res.body).toMatchObject({
     error: "Fieldmissmatch",
-    description: `missing ${fType} for field "${field}" in ${paramType}`,
+    description: expect.stringMatching(new RegExp("Missing: '" + field + "'")),
   });
   expect(res.status).toBe(400);
   return res;
@@ -36,7 +36,9 @@ const expectWrong = async (path, body, paramType, field, fType) => {
     .expect("Content-Type", "application/json; charset=utf-8");
   expect(res.body).toMatchObject({
     error: "Fieldmissmatch",
-    description: `expected ${fType} for field "${field}" in ${paramType}`,
+    description: expect.stringMatching(
+      new RegExp(`(Type missmatch:|Too much: Found|Missing:) '${field}`)
+    ),
   });
   expect(res.status).toBe(400);
   return res;

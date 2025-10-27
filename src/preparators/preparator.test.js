@@ -120,7 +120,14 @@ describe("Server error", () => {
     app.post(
       getNextUrl() + ":id",
       prepare(
-        { hasAccess: async () => true, receives: {}, returns: [] },
+        {
+          hasAccess: async () => true,
+          receives: {
+            body: obj({ test: string() }),
+            params: obj({ id: string() }),
+          },
+          returns: [],
+        },
         async () => {
           throw new Error("ups");
         }
@@ -198,7 +205,10 @@ describe("Server error", () => {
       prepare(
         {
           hasAccess: async () => true,
-          receives: {},
+          receives: {
+            body: obj({ test: string() }),
+            params: obj({ id: string() }),
+          },
           returns: [],
           logError: logFn,
         },
