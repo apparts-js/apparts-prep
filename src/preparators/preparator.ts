@@ -2,13 +2,11 @@ import { v1 as uuidv1 } from "uuid";
 import * as types from "@apparts/types";
 import {
   types as typesTypes,
-  checkType as recursiveCheck,
   explainCheck,
   Obj,
   Required,
   Schema,
   obj,
-  fillInDefaultsStrict,
 } from "@apparts/types";
 import { assertionType } from "../apiTypes/preparatorAssertionType";
 import { returnType } from "../apiTypes/preparatorReturnType";

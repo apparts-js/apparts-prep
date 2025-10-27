@@ -16,7 +16,7 @@ const expectSuccess = async (path, body, retBody = "ok") => {
   return res;
 };
 
-const expectMiss = async (path, body, paramType, field, fType) => {
+const expectMiss = async (path, body, paramType, field) => {
   const res = await request(app)
     .post(path)
     .send(body)
@@ -29,7 +29,7 @@ const expectMiss = async (path, body, paramType, field, fType) => {
   return res;
 };
 
-const expectWrong = async (path, body, paramType, field, fType) => {
+const expectWrong = async (path, body, paramType, field) => {
   const res = await request(app)
     .post(path)
     .send(body)
