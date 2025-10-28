@@ -49,6 +49,7 @@ export type OptionsType<
   logError?: LogErrorFn;
   logResponse?: LogResponseFn;
   hasAccess: CheckAccessFn<AuthType>;
+  disableChecks?: boolean;
 };
 
 export type RequestType<

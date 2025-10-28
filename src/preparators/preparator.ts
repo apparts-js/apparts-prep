@@ -90,10 +90,12 @@ export const prepare = <
     res.status(200);
     // iterate over the fields specified in the API's assertions
 
-    for (const fieldName in fields) {
-      for (const key in req[fieldName]) {
-        if (!(key in fields[fieldName])) {
-          delete req[fieldName][key];
+    if (!options.disableChecks) {
+      for (const fieldName in fields) {
+        for (const key in req[fieldName]) {
+          if (!(key in fields[fieldName])) {
+            delete req[fieldName][key];
+          }
         }
       }
     }
@@ -103,6 +105,10 @@ export const prepare = <
       if (!(fieldName in req)) {
         req[fieldName] = {};
       }
+      if (options.disableChecks) {
+        continue;
+      }
+
       let checkResult: ReturnType<typeof check>;
       try {
         checkResult = check(fieldsSchema[fieldName], req[fieldName], fieldName);
